@@ -11,10 +11,7 @@ const crearUsuario = async (req, res) => {
       return res.status(400).json({ error: 'El id_usuario ya está en uso' });
     }
 
-    const id_carrito = uuidv4(); 
-
     const nuevoUsuario = await Usuario.create(req.body);
-    const nuevoCarrito = await Carrito.create({ id_carrito, id_usuario: nuevoUsuario.id_usuario });
     
     res.status(201).json({ usuario: nuevoUsuario, carrito: nuevoCarrito });
   } catch (error) {

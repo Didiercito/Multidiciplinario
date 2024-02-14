@@ -6,5 +6,6 @@ const productoRoutes = require('./src/routes/Producto.routes');
 app.use(express.json());
 app.use('/usuarios', usuarioRoutes);
 app.use('/productos', productoRoutes);
+app.use('/carrito',require('./src/routes/carrito.routes'))
 
 module.exports = app;
