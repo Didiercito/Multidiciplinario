@@ -78,16 +78,20 @@ exports.updateCarrito = async (req, res) => {
 exports.eliminarProductoDelCarrito = async (req, res) => {
   try {
     const idUsuario = req.params.id;
-    const idProductoAEliminar = req.body.idProducto; // Suponiendo que se envía el ID del producto a eliminar en el cuerpo de la solicitud
+    const id_producto = req.body.idProducto; // Suponiendo que se envía el ID del producto a eliminar en el cuerpo de la solicitud
 
-    const carritoActualizado = await Carrito.findOneAndUpdate(
-      { id_usuario: idUsuario },
-      { $pull: { productos: { _id: idProductoAEliminar } } }, // Utilizamos $pull para eliminar el producto del arreglo de productos
-      { new: true }
-    );
+    const carrito = await Carrito.findOne({ id_usuario: idUsuario });
 
-    if (carritoActualizado) {
-      res.status(200).json(carritoActualizado);
+    // Filtra el producto que deseas eliminar
+    carrito.productos = carrito.productos.filter(producto => producto._id != id_producto);
+
+    console.log('sdasdasda');
+
+    // Guarda los cambios en la base de datos
+    await carrito.save();
+
+    if (carrito) {
+      res.status(200).json(carrito);
     } else {
       res.status(404).json({ message: "Carrito no encontrado" });
     }

@@ -15,6 +15,6 @@ router.post('/', carritoController.createCarrito);
 router.put('/:id', carritoController.updateCarrito);
 
 // Ruta para eliminar un carrito
-router.delete('/:id', carritoController.createCarrito);
+router.delete('/:id', carritoController.eliminarProductoDelCarrito);
 
 module.exports = router;
