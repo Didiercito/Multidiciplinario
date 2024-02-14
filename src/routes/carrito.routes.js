@@ -11,6 +11,8 @@ router.get('/:id', carritoController.getCarritoById);
 // Ruta para crear un nuevo carrito
 router.post('/', carritoController.createCarrito);
 
+router.post('/agregarProducto', carritoController.addProductoToCarrito);
+
 // Ruta para actualizar un carrito
 router.put('/:id', carritoController.updateCarrito);
 

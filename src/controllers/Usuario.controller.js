@@ -13,7 +13,7 @@ const crearUsuario = async (req, res) => {
 
     const nuevoUsuario = await Usuario.create(req.body);
     
-    res.status(201).json({ usuario: nuevoUsuario, carrito: nuevoCarrito });
+    res.status(201).json({ usuario: nuevoUsuario});
   } catch (error) {
     console.error('Error al crear el usuario y su carrito:', error);
     res.status(500).json({ error: 'Error al crear el usuario y su carrito' });
