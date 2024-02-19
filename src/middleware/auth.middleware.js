@@ -1,25 +1,39 @@
-// const jwt = require('jsonwebtoken');
-// const secretKey = process.env.JWT_SECRET;
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+const jwtSecret = process.env.JWT_SECRET;
 
-// async function verificarToken(req, res, next) {
-//     const token = req.headers['authorization'];
-//     if (typeof token !== 'undefined') {
-//         const tokenString = token.split(' ')[1];
-//         jwt.verify(tokenString, secretKey, (err, decoded) => {
-//             if (err) {
-//                 return res.status(403).json({ message: 'Token inválido' });
-//             }
-//             req.user = decoded;
+const VerificarJWT = (req, res, next) => {
+    const authorizationHeader = req.headers['authorization'];
 
-//             if (req.user.id_rol !== '1') { 
-//                 return res.status(403).json({ message: 'No tienes permisos para hacer esta acción' });
-//             }
+   
+    if (!authorizationHeader) {
+        req.usuario = undefined;
+        return next();
+    }
 
-//             next();
-//         });
-//     } else {
-//         res.status(403).json({ message: 'Token no proporcionado' });
-//     }
-// }
+    const tokenParts = authorizationHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+        return res.status(401).json({
+            message: 'Error al validar el token',
+            error: 'Formato de token inválido'
+        });
+    }
+    
+    const token = tokenParts[1];
+    
+    jwt.verify(token, jwtSecret, (err, decoded) => {
+        if (err) {
+            console.error(err); 
+            return res.status(401).json({
+                message: 'Error al validar el token',
+                error: 'Token inválido',
+                details: err.message 
+            });
+        }
+        
+        req.usuario = decoded;
+        next();
+    });
+};
 
-// module.exports = verificarToken;
+module.exports = VerificarJWT;

@@ -1,10 +1,9 @@
-const { response, request } = require("express");
 const Carrito = require("../models/Carritos.models");
 const Producto = require('../models/Productos.models')
 const { v4: uuidv4 } = require('uuid');
 
 // Controlador para obtener todos los carritos
-exports.getCarritos = async (req, res) => {
+const getCarritos = async (req, res) => {
   try {
     const carritos = await Carrito.find();
     res.status(200).json(carritos);
@@ -14,7 +13,7 @@ exports.getCarritos = async (req, res) => {
 };
 
 // Controlador para obtener un carrito por su ID
-exports.getCarritoById = async (req, res) => {
+const getCarritoById = async (req, res) => {
   try {
     const carrito = await Carrito.findById(req.params.id);
     if (carrito) {
@@ -28,7 +27,7 @@ exports.getCarritoById = async (req, res) => {
 };
 
 // Controlador para crear un nuevo carrito
-exports.createCarrito = async (req, res) => {
+const createCarrito = async (req, res) => {
   try {
     const id_carrito = uuidv4();
     const producto = await Producto.findOne({ id_Producto: req.body.productos.producto });
@@ -53,7 +52,7 @@ exports.createCarrito = async (req, res) => {
 };
 
 // Controlador para actualizar un carrito
-exports.updateCarrito = async (req, res) => {
+const updateCarrito = async (req, res) => {
   try {
     const idUsuario = req.params.id;
     const nuevoCarrito = req.body;
@@ -75,7 +74,7 @@ exports.updateCarrito = async (req, res) => {
 };
 
 // Controlador para eliminar un carrito
-exports.eliminarProductoDelCarrito = async (req, res) => {
+const eliminarProductoDelCarrito = async (req, res) => {
   try {
     const idUsuario = req.params.id;
     const id_producto = req.body.idProducto; // Suponiendo que se envía el ID del producto a eliminar en el cuerpo de la solicitud
@@ -85,7 +84,6 @@ exports.eliminarProductoDelCarrito = async (req, res) => {
     // Filtra el producto que deseas eliminar
     carrito.productos = carrito.productos.filter(producto => producto._id != id_producto);
 
-    console.log('sdasdasda');
 
     // Guarda los cambios en la base de datos
     await carrito.save();
@@ -100,3 +98,11 @@ exports.eliminarProductoDelCarrito = async (req, res) => {
   }
 };
 
+
+module.exports= {
+  getCarritos,
+  getCarritoById,
+  createCarrito,
+  updateCarrito,
+  eliminarProductoDelCarrito
+}

@@ -1,29 +1,31 @@
 const Usuario = require('../models/Usuarios.models');
 const Carrito = require('../models/Carritos.models');
 const Producto = require('../models/Productos.models');
-const { v4: uuidv4 } = require('uuid');
 
 
 const crearUsuario = async (req, res) => {
   try {
+    // Verificar si ya existe un usuario con el mismo id_usuario
     const usuarioExistente = await Usuario.findOne({ id_usuario: req.body.id_usuario });
     if (usuarioExistente) {
       return res.status(400).json({ error: 'El id_usuario ya está en uso' });
     }
 
+    // Crear el nuevo usuario solo si no existe uno con el mismo id_usuario
     const nuevoUsuario = await Usuario.create(req.body);
     
-    res.status(201).json({ usuario: nuevoUsuario, carrito: nuevoCarrito });
+    res.status(201).json({ usuario: nuevoUsuario });
   } catch (error) {
-    console.error('Error al crear el usuario y su carrito:', error);
-    res.status(500).json({ error: 'Error al crear el usuario y su carrito' });
+    console.error('Error al crear el usuario:', error);
+    res.status(500).json({ error: 'Error al crear el usuario' });
   }
 };
 
 
+
 const obtenerUsuarios = async (req, res) => {
   try {
-    const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil')
+    const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
       .populate({
         path: 'carrito',
         populate: {
