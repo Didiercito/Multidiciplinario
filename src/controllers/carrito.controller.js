@@ -1,6 +1,6 @@
 const Carrito = require("../models/Carritos.models");
-const Producto = require('../models/Productos.models')
-const { v4: uuidv4 } = require('uuid');
+const Producto = require("../models/Productos.models");
+const { v4: uuidv4 } = require("uuid");
 
 // Controlador para obtener todos los carritos
 const getCarritos = async (req, res) => {
@@ -30,7 +30,10 @@ const getCarritoById = async (req, res) => {
 const createCarrito = async (req, res) => {
   try {
     const id_carrito = uuidv4();
-    const producto = await Producto.findOne({ id_Producto: req.body.productos.producto });
+    const producto = await Producto.findOne({
+      id_Producto: req.body.productos.producto,
+    });
+    const can = req.body.productos[0].cantidadProducto;
 
     if (!producto) {
       return res.status(404).json({ message: "Producto no encontrado" });
@@ -38,10 +41,12 @@ const createCarrito = async (req, res) => {
 
     const nuevoCarrito = await Carrito.create({
       id_carrito: id_carrito,
-      productos: [{
-        producto: producto, // Aquí se asigna solo el _id del producto
-        cantidad: req.body.productos.cantidad,
-      }],
+      productos: [
+        {
+          producto: producto,
+          cantidadProducto: can,
+        },
+      ],
       id_usuario: req.body.id_usuario,
     });
 
@@ -50,6 +55,52 @@ const createCarrito = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// Controlador para agregar productos al carrito existente
+exports.addProductoToCarrito = async (req, res) => {
+  try {
+    // Obtener el ID del carrito y el ID del usuario de la solicitud
+    const { id_carrito, id_usuario } = req.body;
+
+    // Verificar si el carrito existe y pertenece al usuario
+    const carritoExistente = await Carrito.findOne({ id_carrito, id_usuario });
+    if (!carritoExistente) {
+      return res.status(404).json({ message: "Carrito no encontrado para este usuario." });
+    }
+
+    // Obtener el ID del producto y la cantidadProducto de la solicitud
+    const { producto, cantidadProducto } = req.body.productos[0]; // Acceder al primer producto enviado en la solicitud
+    
+    if (!cantidadProducto) {
+      return res.status(400).json({ message: "La cantidad del producto es inválida." });
+    }
+
+    // Buscar el producto en la colección de productos
+    const productoEncontrado = await Producto.findOne({ id_producto: producto });
+    if (!productoEncontrado) {
+      return res.status(404).json({ message: "Producto no encontrado." });
+    }
+
+    // Verificar si el producto ya está en el carrito
+    const productoExistenteIndex = carritoExistente.productos.findIndex(item => item.producto.id_producto === producto);
+    if (productoExistenteIndex !== -1) {
+      // Si el producto ya está en el carrito, sumar la cantidadProducto
+      carritoExistente.productos[productoExistenteIndex].cantidadProducto += cantidadProducto;
+    } else {
+      // Si el producto no está en el carrito, agregarlo
+      carritoExistente.productos.push({ producto: productoEncontrado, cantidadProducto });
+    }
+
+    // Guardar el carrito actualizado
+    const carritoActualizado = await carritoExistente.save();
+    
+    res.status(200).json(carritoActualizado);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
 
 // Controlador para actualizar un carrito
 const updateCarrito = async (req, res) => {
@@ -82,8 +133,11 @@ const eliminarProductoDelCarrito = async (req, res) => {
     const carrito = await Carrito.findOne({ id_usuario: idUsuario });
 
     // Filtra el producto que deseas eliminar
-    carrito.productos = carrito.productos.filter(producto => producto._id != id_producto);
+    carrito.productos = carrito.productos.filter(
+      (producto) => producto._id != id_producto
+    );
 
+    console.log('sdasdasda');
 
     // Guarda los cambios en la base de datos
     await carrito.save();
@@ -97,7 +151,6 @@ const eliminarProductoDelCarrito = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
 
 module.exports= {
   getCarritos,
