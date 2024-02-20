@@ -22,7 +22,7 @@ const usuarioSchema = new mongoose.Schema({
   contrasena: {
     type: String,
     required: true,
-    unique:true
+    unique: true
   },
   telefono: {
     type: String,
@@ -36,7 +36,7 @@ const usuarioSchema = new mongoose.Schema({
   },
   foto_perfil: {
     type: String,
-    required: true,
+    required: true
   },
   carrito: [
     {

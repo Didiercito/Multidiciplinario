@@ -3,25 +3,6 @@ const Carrito = require('../models/Carritos.models');
 const Producto = require('../models/Productos.models');
 
 
-const crearUsuario = async (req, res) => {
-  try {
-    // Verificar si ya existe un usuario con el mismo id_usuario
-    const usuarioExistente = await Usuario.findOne({ id_usuario: req.body.id_usuario });
-    if (usuarioExistente) {
-      return res.status(400).json({ error: 'El id_usuario ya está en uso' });
-    }
-
-    // Crear el nuevo usuario solo si no existe uno con el mismo id_usuario
-    const nuevoUsuario = await Usuario.create(req.body);
-    
-    res.status(201).json({ usuario: nuevoUsuario });
-  } catch (error) {
-    console.error('Error al crear el usuario:', error);
-    res.status(500).json({ error: 'Error al crear el usuario' });
-  }
-};
-
-
 
 const obtenerUsuarios = async (req, res) => {
   try {
@@ -92,46 +73,44 @@ const eliminarUsuario = async (req, res) => {
   }
 };
 
-const agregarProductoAlCarrito = async (req, res) => {
-  const { id_usuario, id_carrito, id_producto } = req.params;
+// const agregarProductoAlCarrito = async (req, res) => {
+//   const { id_usuario, id_carrito, id_producto } = req.params;
 
-  try {
-    const usuario = await Usuario.findOne({ id_usuario });
-    if (!usuario) {
-      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-    }
+//   try {
+//     const usuario = await Usuario.findOne({ id_usuario });
+//     if (!usuario) {
+//       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+//     }
 
-    const producto = await Producto.findOne({ id_producto });
-    if (!producto) {
-      return res.status(404).json({ mensaje: 'Producto no encontrado' });
-    }
+//     const producto = await Producto.findOne({ id_producto });
+//     if (!producto) {
+//       return res.status(404).json({ mensaje: 'Producto no encontrado' });
+//     }
 
-    let carrito = await Carrito.findOne({ id_usuario, id_carrito });
-    if (!carrito) {
-      carrito = await Carrito.create({ id_carrito, id_usuario });
-      usuario.carrito.push(carrito._id);
-      await usuario.save();
-    }
+//     let carrito = await Carrito.findOne({ id_usuario, id_carrito });
+//     if (!carrito) {
+//       carrito = await Carrito.create({ id_carrito, id_usuario });
+//       usuario.carrito.push(carrito._id);
+//       await usuario.save();
+//     }
 
-    carrito.productos.push(producto);
-    await carrito.save();
+//     carrito.productos.push(producto);
+//     await carrito.save();
 
-    producto.cantidad--;
-    await producto.save();
+//     producto.cantidad--;
+//     await producto.save();
 
-    res.status(200).json({ mensaje: `Producto agregado al carrito de ${usuario.nombre} correctamente`, producto });
-  } catch (error) {
-    console.error('Error al agregar producto al carrito:', error);
-    res.status(500).json({ error: 'Error al agregar producto al carrito' });
-  }
-};
+//     res.status(200).json({ mensaje: `Producto agregado al carrito de ${usuario.nombre} correctamente`, producto });
+//   } catch (error) {
+//     console.error('Error al agregar producto al carrito:', error);
+//     res.status(500).json({ error: 'Error al agregar producto al carrito' });
+//   }
+// };
 
 
 module.exports = {
-  crearUsuario,
   obtenerUsuarios,
   obtenerUsuarioPorId,
   actualizarUsuario,
   eliminarUsuario,
-  agregarProductoAlCarrito
 };

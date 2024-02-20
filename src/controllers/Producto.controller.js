@@ -1,41 +1,47 @@
 const Producto = require('../models/Productos.models');
+const Usuario = require('../models/Usuarios.models');
 
-// Crear un nuevo producto
-const crearProducto = async (req, res) => {
-  try {
-    const nuevoProducto = await Producto.create(req.body);
-    res.status(201).json({ producto: nuevoProducto });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al crear el producto' });
-  }
-};
-
-// Obtener todos los productos
 const obtenerProductos = async (req, res) => {
   try {
-    const productos = await Producto.find({}, '-_id id_producto nombre descripcion caracteristicas cantidad foto_producto precio categoria');
+    const { nombre, categoria } = req.query;
+
+    const condiciones = {};
+    if (nombre) {
+      condiciones.nombre = { $regex: new RegExp(nombre, 'i') };
+    }
+    if (categoria) {
+      condiciones.categoria = categoria;
+    }
+
+    const productos = await Producto.find(condiciones);
+
     res.json({ productos });
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener los productos' });
   }
 };
 
-// Obtener un producto por su ID
-const obtenerProductoPorId = async (req, res) => {
+const crearProducto = async (req, res) => {
   try {
-    const producto = await Producto.findOne({ id_producto: req.params.id_producto }, '-_id id_producto nombre descripcion caracteristicas cantidad foto_producto precio categoria');
-    if (!producto) {
-      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    const usuario = await Usuario.findById(req.usuario.id);
+    if (!usuario || !usuario.roles.some(role => role.name === 'Administrador')) {
+      return res.status(403).json({ error: 'No tienes permisos para crear productos' });
     }
-    res.json({ producto });
+    
+    const nuevoProducto = await Producto.create(req.body);
+    res.status(201).json({ message: 'Producto creado exitosamente', producto: nuevoProducto });
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el producto' });
+    console.error('Error al crear el producto:', error); 
+    res.status(500).json({ error: 'Error al crear el producto', details: error.message });
   }
 };
 
-// Actualizar un producto por su ID
 const actualizarProducto = async (req, res) => {
   try {
+    const usuario = await Usuario.findById(req.usuario.id);
+    if (!usuario.roles.some(role => role.name === 'Administrador')) {
+      return res.status(403).json({ error: 'No tienes permisos para actualizar productos' });
+    }
     const productoActualizado = await Producto.findOneAndUpdate({ id_producto: req.params.id_producto }, req.body, { new: true });
     if (!productoActualizado) {
       return res.status(404).json({ mensaje: 'Producto no encontrado' });
@@ -46,9 +52,12 @@ const actualizarProducto = async (req, res) => {
   }
 };
 
-// Eliminar un producto por su ID
 const eliminarProducto = async (req, res) => {
   try {
+    const usuario = await Usuario.findById(req.usuario.id);
+    if (!usuario.roles.some(role => role.name === 'Administrador')) {
+      return res.status(403).json({ error: 'No tienes permisos para eliminar productos' });
+    }
     const productoEliminado = await Producto.findOneAndDelete({ id_producto: req.params.id_producto });
     if (!productoEliminado) {
       return res.status(404).json({ mensaje: 'Producto no encontrado' });
@@ -60,9 +69,8 @@ const eliminarProducto = async (req, res) => {
 };
 
 module.exports = {
-  crearProducto,
   obtenerProductos,
-  obtenerProductoPorId,
+  crearProducto,
   actualizarProducto,
   eliminarProducto
 };

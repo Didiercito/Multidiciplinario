@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const productoController = require('../controllers/Producto.controller');
+const VerificarJWT = require('../middleware/auth.middleware');
 
-router.post('/', productoController.crearProducto);
 router.get('/', productoController.obtenerProductos);
-router.get('/:id_producto', productoController.obtenerProductoPorId);
-router.put('/:id_producto', productoController.actualizarProducto);
-router.delete('/:id_producto', productoController.eliminarProducto);
+router.post('/', VerificarJWT, productoController.crearProducto); // Asegúrate de aplicar el middleware VerificarJWT aquí
+router.put('/:id_producto', VerificarJWT, productoController.actualizarProducto);
+router.delete('/:id_producto', VerificarJWT, productoController.eliminarProducto);
 
 module.exports = router;

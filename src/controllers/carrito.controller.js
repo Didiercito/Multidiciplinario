@@ -57,7 +57,7 @@ const createCarrito = async (req, res) => {
 };
 
 // Controlador para agregar productos al carrito existente
-exports.addProductoToCarrito = async (req, res) => {
+const addProductoToCarrito = async (req, res) => {
   try {
     // Obtener el ID del carrito y el ID del usuario de la solicitud
     const { id_carrito, id_usuario } = req.body;
@@ -100,8 +100,6 @@ exports.addProductoToCarrito = async (req, res) => {
   }
 };
 
-
-
 // Controlador para actualizar un carrito
 const updateCarrito = async (req, res) => {
   try {
@@ -124,7 +122,7 @@ const updateCarrito = async (req, res) => {
   }
 };
 
-// Controlador para eliminar un carrito
+// Controlador para eliminar un producto del carrito
 const eliminarProductoDelCarrito = async (req, res) => {
   try {
     const idUsuario = req.params.id;
@@ -136,8 +134,6 @@ const eliminarProductoDelCarrito = async (req, res) => {
     carrito.productos = carrito.productos.filter(
       (producto) => producto._id != id_producto
     );
-
-    console.log('sdasdasda');
 
     // Guarda los cambios en la base de datos
     await carrito.save();
@@ -152,10 +148,11 @@ const eliminarProductoDelCarrito = async (req, res) => {
   }
 };
 
-module.exports= {
+module.exports = {
   getCarritos,
   getCarritoById,
   createCarrito,
   updateCarrito,
-  eliminarProductoDelCarrito
-}
+  eliminarProductoDelCarrito,
+  addProductoToCarrito
+};
