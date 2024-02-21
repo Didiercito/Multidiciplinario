@@ -20,17 +20,17 @@
             await Rol.insertMany(roles);
             console.log('Roles creados');
 
-            const existingAdmin = await Usuario.findOne({ id_usuario: 'admin123' });
+            const existingAdmin = await Usuario.findOne({ id_usuario: '1123' });
 
             if (existingAdmin) {
-                await Usuario.deleteOne({ id_usuario: 'admin123' });
-                console.log('Usuario "admin123" anterior eliminado');
+                await Usuario.deleteOne({ id_usuario: '1123' });
+                console.log('Usuario "admin" anterior eliminado');
             }
 
             const adminRole = await Rol.findOne({ name: 'Administrador' });
             const hashedPassword = await bcrypt.hash('didi', 10); 
             const Administrador = {
-                id_usuario: 'admin123',
+                id_usuario: '1123',
                 nombre: 'Admin',
                 apellido: 'Admin',
                 correo: 'admin@example.com',
@@ -39,7 +39,7 @@
                 usuario: 'admin', 
                 foto_perfil: 'default.jpg',
                 carrito: [],
-                roles: [adminRole] // Asigna el objeto completo del rol en lugar del ID
+                roles: [adminRole]
             };
 
             await Usuario.create(Administrador);
