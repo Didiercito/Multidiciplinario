@@ -2,7 +2,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const jwtSecret = process.env.JWT_SECRET;
-
 const Usuario = require('../models/Usuarios.models');
 const Rol = require('../models/Rol.models');
 
@@ -49,7 +48,7 @@ const signin = async (req, res) => {
     const { usuario, contrasena } = req.body;
 
     try {
-        const user = await Usuario.findOne({ usuario });
+        const user = await Usuario.findOne({ usuario }).populate('roles');
 
         if (!user) {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -61,7 +60,9 @@ const signin = async (req, res) => {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
-        const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '8h' });
+        const roles = user.roles.map(role => role.name);
+
+        const token = jwt.sign({ id: user._id, roles }, jwtSecret, { expiresIn: '10h' });
 
         res.json({ message: 'Inicio de sesión correcto', token });
     } catch (error) {
