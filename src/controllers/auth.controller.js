@@ -7,7 +7,7 @@ const Rol = require('../models/Rol.models');
 
 const signup = async (req, res) => {
     try {
-        const { id_usuario, nombre, apellido, correo, contrasena, telefono, usuario, foto_perfil, roleName } = req.body;
+        const { id_usuario, nombre, apellido, correo, contrasena, telefono, usuario, foto_perfil } = req.body;
 
         const existingUser = await Usuario.findOne({ correo });
 
@@ -17,11 +17,7 @@ const signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(contrasena, 10);
 
-        const role = await Rol.findOne({ name: roleName });
-
-        if (!role) {
-            return res.status(400).json({ error: 'El rol especificado no existe' });
-        }
+        const userRole = await Rol.findOne({ name: 'Usuario' });
 
         const newUser = new Usuario({
             id_usuario,
@@ -32,7 +28,7 @@ const signup = async (req, res) => {
             telefono,
             usuario,
             foto_perfil,
-            roles: [role._id]
+            roles: [userRole._id] // Asigna automáticamente el rol de "Usuario"
         });
 
         await newUser.save();
@@ -60,7 +56,10 @@ const signin = async (req, res) => {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
-        const roles = user.roles.map(role => role.name);
+        let roles = [];
+        if (user.roles.length > 0) {
+            roles = user.roles.map(role => role.name);
+        }
 
         const token = jwt.sign({ id: user._id, roles }, jwtSecret, { expiresIn: '10h' });
 
