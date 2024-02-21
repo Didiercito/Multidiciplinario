@@ -28,7 +28,7 @@ const signup = async (req, res) => {
             telefono,
             usuario,
             foto_perfil,
-            roles: [userRole._id] // Asigna automáticamente el rol de "Usuario"
+            roles: [userRole._id]
         });
 
         await newUser.save();

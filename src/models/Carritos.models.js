@@ -22,6 +22,7 @@ const carritoSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  //cntidad de productos, monto
 });
 
 const Carrito = mongoose.model("Carrito", carritoSchema);
