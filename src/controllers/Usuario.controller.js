@@ -1,21 +1,21 @@
 const Usuario = require('../models/Usuarios.models');
-const Carrito = require('../models/Carritos.models');
-const Producto = require('../models/Productos.models');
-
-
 
 const obtenerUsuarios = async (req, res) => {
   try {
-    const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
-      .populate({
-        path: 'carrito',
-        populate: {
-          path: 'productos.id_producto',
-          model: 'Producto',
-          select: 'id_producto, nombre, descripcion, precio, caracteristicas,foto_producto, categoria, cantidad '
-        }
-      });
-    res.json({ usuarios });
+    if (req.usuario && req.usuario.roles.includes('Administrador')) {
+      const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
+        .populate({
+          path: 'carrito',
+          populate: {
+            path: 'productos.id_producto',
+            model: 'Producto',
+            select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
+          }
+        });
+      res.json({ usuarios });
+    } else {
+      return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
+    }
   } catch (error) {
     console.error('Error al obtener los usuarios:', error);
     res.status(500).json({ error: 'Error al obtener los usuarios' });
@@ -45,9 +45,6 @@ const obtenerUsuarioPorId = async (req, res) => {
   }
 };
 
-
-
-
 const actualizarUsuario = async (req, res) => {
   try {
     const usuarioActualizado = await Usuario.findOneAndUpdate({ id_usuario: req.params.id }, req.body, { new: true });
@@ -73,44 +70,10 @@ const eliminarUsuario = async (req, res) => {
   }
 };
 
-// const agregarProductoAlCarrito = async (req, res) => {
-//   const { id_usuario, id_carrito, id_producto } = req.params;
-
-//   try {
-//     const usuario = await Usuario.findOne({ id_usuario });
-//     if (!usuario) {
-//       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-//     }
-
-//     const producto = await Producto.findOne({ id_producto });
-//     if (!producto) {
-//       return res.status(404).json({ mensaje: 'Producto no encontrado' });
-//     }
-
-//     let carrito = await Carrito.findOne({ id_usuario, id_carrito });
-//     if (!carrito) {
-//       carrito = await Carrito.create({ id_carrito, id_usuario });
-//       usuario.carrito.push(carrito._id);
-//       await usuario.save();
-//     }
-
-//     carrito.productos.push(producto);
-//     await carrito.save();
-
-//     producto.cantidad--;
-//     await producto.save();
-
-//     res.status(200).json({ mensaje: `Producto agregado al carrito de ${usuario.nombre} correctamente`, producto });
-//   } catch (error) {
-//     console.error('Error al agregar producto al carrito:', error);
-//     res.status(500).json({ error: 'Error al agregar producto al carrito' });
-//   }
-// };
-
-
 module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
   actualizarUsuario,
   eliminarUsuario,
 };
+ 

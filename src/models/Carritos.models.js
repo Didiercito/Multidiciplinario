@@ -14,7 +14,7 @@ const carritoSchema = new mongoose.Schema({
       },
       cantidadProducto: {
         type: Number,
-        required: true
+        required: true,
       }
     },
   ],
@@ -22,7 +22,14 @@ const carritoSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  //cntidad de productos, monto
+  cantidad_productos: {
+    type: Number,
+    default: 0,
+  },
+  monto_total: {
+    type: Number,
+    default: 0,
+  }
 });
 
 const Carrito = mongoose.model("Carrito", carritoSchema);
