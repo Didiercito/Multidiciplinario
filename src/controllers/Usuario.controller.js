@@ -5,12 +5,9 @@ const obtenerUsuarios = async (req, res) => {
     if (req.usuario && req.usuario.roles.includes('Administrador')) {
       const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
         .populate({
-          path: 'carrito',
-          populate: {
-            path: 'productos.id_producto',
-            model: 'Producto',
-            select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
-          }
+          path: 'carrito.productos.producto', // Poblamos directamente el producto
+          model: 'Producto',
+          select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
         });
       res.json({ usuarios });
     } else {
@@ -26,12 +23,9 @@ const obtenerUsuarioPorId = async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ id_usuario: req.params.id_usuario })
       .populate({
-        path: 'carrito',
-        populate: {
-          path: 'productos.id_producto',
-          model: 'Producto',
-          select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
-        }
+        path: 'carrito.productos.producto', // Poblamos directamente el producto
+        model: 'Producto',
+        select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
       });
 
     if (!usuario) {
@@ -76,4 +70,3 @@ module.exports = {
   actualizarUsuario,
   eliminarUsuario,
 };
- 
