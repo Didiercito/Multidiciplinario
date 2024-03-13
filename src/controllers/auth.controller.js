@@ -5,6 +5,7 @@ const jwtSecret = process.env.JWT_SECRET;
 const Usuario = require('../models/Usuarios.models');
 const Rol = require('../models/Rol.models');
 
+
 const signup = async (req, res) => {
     try {
         const { id_usuario, nombre, apellido, correo, contrasena, telefono, usuario, foto_perfil } = req.body;

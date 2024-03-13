@@ -2,16 +2,16 @@ const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const { v4: uuidv4 } = require("uuid");
 
-const getCarritos = async (req, res) => {
+const obtenerCarritos = async (req, res) => {
   try {
     const carritos = await Carrito.find();
     res.status(200).json(carritos);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(404).json({ message: error.message });
   }
 };
 
-const getCarritoById = async (req, res) => {
+const obtenerCarritoPorId = async (req, res) => {
   try {
     const carrito = await Carrito.findById(req.params.id);
     if (carrito) {
@@ -20,11 +20,11 @@ const getCarritoById = async (req, res) => {
       res.status(404).json({ message: "Carrito no encontrado" });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(404).json({ message: error.message });
   }
 };
 
-const createCarrito = async (req, res) => {
+const crearCarrito = async (req, res) => {
   try {
     const id_carrito = uuidv4();
     const producto = await Producto.findOne({
@@ -55,14 +55,24 @@ const createCarrito = async (req, res) => {
   }
 };
 
-const addProductoToCarrito = async (req, res) => {
+const agregarProductoAlCarrito = async (req, res) => {
   try {
     const { id_usuario, id_producto } = req.params;
     const cantidadProducto = req.body.cantidadProducto;
 
-    const carritoExistente = await Carrito.findOne({ id_usuario });
+    // Busca si hay un carrito existente para el usuario
+    let carritoExistente = await Carrito.findOne({ id_usuario });
+
+    // Si no hay carrito para el usuario, crea uno nuevo
     if (!carritoExistente) {
-      return res.status(404).json({ message: "Carrito no encontrado para este usuario." });
+      const id_carrito = uuidv4();
+      carritoExistente = await Carrito.create({
+        id_carrito,
+        productos: [],
+        id_usuario,
+        cantidad_productos: 0,
+        monto_total: 0,
+      });
     }
 
     const productoEncontrado = await Producto.findOne({ id_producto });
@@ -92,7 +102,8 @@ const addProductoToCarrito = async (req, res) => {
   }
 };
 
-const updateCarrito = async (req, res) => {
+
+const actualizarCarrito = async (req, res) => {
   try {
     const idUsuario = req.params.id;
     const nuevoCarrito = req.body;
@@ -141,10 +152,10 @@ const eliminarProductoDelCarrito = async (req, res) => {
 };
 
 module.exports = {
-  getCarritos,
-  getCarritoById,
-  createCarrito,
-  updateCarrito,
+  obtenerCarritos,
+  obtenerCarritoPorId,
+  crearCarrito,
+  actualizarCarrito,
   eliminarProductoDelCarrito,
-  addProductoToCarrito
+  agregarProductoAlCarrito
 };

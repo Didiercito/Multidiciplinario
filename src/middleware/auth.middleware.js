@@ -6,7 +6,6 @@ const VerificarJWT = (req, res, next) => {
     const authorizationHeader = req.headers['authorization'];
 
     if (!authorizationHeader) {
-        req.usuario = undefined;
         return next(); 
     }
 

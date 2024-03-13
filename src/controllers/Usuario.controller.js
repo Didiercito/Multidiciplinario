@@ -23,14 +23,35 @@ const obtenerUsuarioPorId = async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ id_usuario: req.params.id_usuario })
       .populate({
-        path: 'carrito.productos.producto', // Poblamos directamente el producto
-        model: 'Producto',
-        select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
+        path: 'carrito', // Poblamos el carrito del usuario
+        populate: {
+          path: 'productos.producto', // Poblamos los productos dentro del carrito
+          model: 'Producto',
+          select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
+        }
       });
 
     if (!usuario) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
+
+    // Mapeamos el carrito para mostrar solo la información de los productos
+    const carritoConProductos = usuario.carrito.map(item => ({
+      id_carrito: item.id_carrito,
+      productos: item.productos.map(producto => ({
+        id_producto: producto.producto.id_producto,
+        nombre: producto.producto.nombre,
+        descripcion: producto.producto.descripcion,
+        precio: producto.producto.precio,
+        foto_producto: producto.producto.foto_producto,
+        cantidadProducto: producto.cantidadProducto
+      })),
+      id_usuario: item.id_usuario,
+      cantidad_productos: item.cantidad_productos,
+      monto_total: item.monto_total
+    }));
+
+    usuario.carrito = carritoConProductos;
 
     res.json({ usuario });
   } catch (error) {
@@ -39,30 +60,35 @@ const obtenerUsuarioPorId = async (req, res) => {
   }
 };
 
+
+
 const actualizarUsuario = async (req, res) => {
   try {
-    const usuarioActualizado = await Usuario.findOneAndUpdate({ id_usuario: req.params.id }, req.body, { new: true });
+    const usuarioActualizado = await Usuario.findOneAndUpdate({ id_usuario: req.params.id_usuario }, req.body, { new: true });
     if (!usuarioActualizado) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
-    res.json({ usuario: usuarioActualizado });
+    res.json({ mensaje: 'Usuario Actualizado correctamente', usuario: usuarioActualizado });
   } catch (error) {
     console.error('Error al actualizar el usuario:', error);
     res.status(500).json({ error: 'Error al actualizar el usuario' });
   }
 };
 
+
 const eliminarUsuario = async (req, res) => {
   try {
-    const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id });
+    const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id_usuario }, {new: true});
     if (!usuarioEliminado) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
-    res.json({ mensaje: 'Usuario eliminado correctamente' });
+    res.json({ mensaje: 'Usuario eliminado correctamente', usuario: usuarioEliminado });
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
+    res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 };
+
 
 module.exports = {
   obtenerUsuarios,

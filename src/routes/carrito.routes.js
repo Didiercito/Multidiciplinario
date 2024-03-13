@@ -1,23 +1,17 @@
     const express = require('express');
     const router = express.Router();
-    const carritoController = require('../controllers/Carrito.controller');
+    const carritoController = require('../controllers/carrito.controller');
 
-    // Ruta para obtener todos los carritos
-    router.get('/', carritoController.getCarritos);
+    router.get('/', carritoController.obtenerCarritos);
 
-    // Ruta para obtener un carrito por su ID
-    router.get('/:id', carritoController.getCarritoById);
+    router.get('/:id', carritoController.obtenerCarritoPorId);
 
-    // Ruta para crear un nuevo carrito
-    router.post('/', carritoController.createCarrito);
+    router.post('/', carritoController.crearCarrito);
 
-    // Ruta para agregar un producto al carrito
-    router.post('/:id_usuario/agregarProducto/:id_producto', carritoController.addProductoToCarrito);
+    router.post('/:id_usuario/agregarProducto/:id_producto', carritoController.agregarProductoAlCarrito);
 
-    // Ruta para actualizar un carrito
-    router.put('/:id', carritoController.updateCarrito);
+    router.put('/:id', carritoController.actualizarCarrito);
 
-    // Ruta para eliminar un producto del carrito
     router.delete('/:id', carritoController.eliminarProductoDelCarrito);
 
     module.exports = router;

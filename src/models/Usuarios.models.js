@@ -21,8 +21,7 @@ const usuarioSchema = new mongoose.Schema({
   },
   contrasena: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   telefono: {
     type: String,
