@@ -69,10 +69,25 @@ const eliminarProducto = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 };
+const obtenerProductoPorId = async (req, res) => {
+    try {
+        const producto = await Producto.findOne({ id_producto: req.params.id_producto });
+
+        if (!producto) {
+            return res.status(404).json({ mensaje: 'Producto no encontrado' });
+        }
+
+        res.json({ producto });
+    } catch (error) {
+        console.error('Error al obtener el producto por ID:', error);
+        res.status(500).json({ error: 'Error al obtener el producto por ID', details: error.message });
+    }
+};
 
 module.exports = {
     obtenerProductos,
     crearProducto,
     actualizarProducto,
-    eliminarProducto
+    eliminarProducto,
+    obtenerProductoPorId 
 };

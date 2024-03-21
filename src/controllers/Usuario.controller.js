@@ -5,7 +5,7 @@ const obtenerUsuarios = async (req, res) => {
     if (req.usuario && req.usuario.roles.includes('Administrador')) {
       const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
         .populate({
-          path: 'carrito.productos.producto', // Poblamos directamente el producto
+          path: 'carrito.productos.producto',
           model: 'Producto',
           select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
         });
@@ -23,9 +23,9 @@ const obtenerUsuarioPorId = async (req, res) => {
   try {
     const usuario = await Usuario.findOne({ id_usuario: req.params.id_usuario })
       .populate({
-        path: 'carrito', // Poblamos el carrito del usuario
+        path: 'carrito',
         populate: {
-          path: 'productos.producto', // Poblamos los productos dentro del carrito
+          path: 'productos.producto', 
           model: 'Producto',
           select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
         }
@@ -35,7 +35,6 @@ const obtenerUsuarioPorId = async (req, res) => {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
 
-    // Mapeamos el carrito para mostrar solo la información de los productos
     const carritoConProductos = usuario.carrito.map(item => ({
       id_carrito: item.id_carrito,
       productos: item.productos.map(producto => ({

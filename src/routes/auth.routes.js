@@ -2,9 +2,9 @@
     const router = express.Router();
     const authController = require('../controllers/auth.controller');
     const VerificarJWT = require('../middleware/auth.middleware');
-    const accountLimiter = require('../middleware/rateLimit.middleware')
+    const accountLimiterSignin = require('../middleware/rateLimit.middleware')
 
     router.post('/signup', authController.signup);
-    router.post('/signin',accountLimiter ,VerificarJWT, authController.signin);
+    router.post('/signin',accountLimiterSignin ,VerificarJWT, authController.signin);
 
     module.exports = router;
