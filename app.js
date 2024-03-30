@@ -8,7 +8,7 @@ const authRoutes = require('./src/routes/auth.routes');
 app.use(express.json());
 app.use('/api/v1/usuarios', usuarioRoutes);
 app.use('/api/v1/productos', productoRoutes);
-app.use('/carrito',carritoRoutes);
+app.use('/api/v1/carrito',carritoRoutes);
 app.use('/api/v1/auth', authRoutes);
 
 module.exports = app;

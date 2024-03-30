@@ -1,9 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const { v4: uuidv4 } = require("uuid");
 const jwtSecret = process.env.JWT_SECRET;
 const Usuario = require('../models/Usuarios.models');
 const Rol = require('../models/Rol.models');
+const Carrito = require ('../models/Carritos.models');
 
 
 const signup = async (req, res) => {
@@ -33,6 +35,17 @@ const signup = async (req, res) => {
         });
 
         await newUser.save();
+
+        const id_carrito  = uuidv4();
+        const nuevoCarritoUsuario = new Carrito({
+            id_carrito,
+            productos:[],
+            id_usuario: newUser.id_usuario,
+            cantidad_productos: 0,
+            monto_total: 0
+        });
+
+        await nuevoCarritoUsuario.save();
 
         res.status(201).json({ message: 'Usuario registrado exitosamente' });
     } catch (error) {

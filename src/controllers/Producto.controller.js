@@ -25,6 +25,16 @@ const crearProducto = async (req, res) => {
         if (!req.usuario.roles.includes('Administrador')) {
             return res.status(403).json({ error: 'No tienes permisos para crear productos' });
         }
+
+        // Verificar si la cantidad es negativa
+        if (req.body.cantidad <=0) {
+            return res.status(400).json({ error: 'La cantidad no es valida' });
+        }
+
+        if(req.body.precio<0){
+            return res.status(400).json({error:'El precio no es valido'})
+        }
+
         const nuevoProducto = await Producto.create(req.body);
         res.status(201).json({ message: 'Producto creado exitosamente', producto: nuevoProducto });
     } catch (error) {
@@ -33,11 +43,19 @@ const crearProducto = async (req, res) => {
     }
 };
 
-
 const actualizarProducto = async (req, res) => {
     try {
         if (!req.usuario.roles.includes('Administrador')) {
             return res.status(403).json({ error: 'No tienes permisos para actualizar productos' });
+        }
+
+        // Verificar si la cantidad es negativa
+        if (req.body.cantidad < 0) {
+            return res.status(400).json({ error: 'La cantidad no es valida' });
+        }
+
+        if(req.body.precio<0){
+            return res.status(400).json({error:'El precio no es valido'})
         }
 
         const productoActualizado = await Producto.findOneAndUpdate({ id_producto: req.params.id_producto }, req.body, { new: true });
@@ -45,8 +63,6 @@ const actualizarProducto = async (req, res) => {
             return res.status(404).json({ mensaje: 'Producto no encontrado' });
         }
 
-        
-        
         res.json({ mensaje: 'Producto actualizado correctamente',producto: productoActualizado}); 
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar el producto', details: error.message });
@@ -59,7 +75,6 @@ const eliminarProducto = async (req, res) => {
         if (!req.usuario.roles.includes('Administrador')) {
             return res.status(403).json({ error: 'No tienes permisos para eliminar productos' });
         }
-
         const productoEliminado = await Producto.findOneAndDelete({ id_producto: req.params.id_producto });
         if (!productoEliminado) {
             return res.status(404).json({ mensaje: 'Producto no encontrado' });
@@ -69,6 +84,7 @@ const eliminarProducto = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 };
+
 const obtenerProductoPorId = async (req, res) => {
     try {
         const producto = await Producto.findOne({ id_producto: req.params.id_producto });

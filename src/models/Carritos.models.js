@@ -8,15 +8,17 @@ const carritoSchema = new mongoose.Schema({
   },
   productos: [
     {
+    
       producto: {
-        type: Object,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Producto",
         required: true,
       },
       cantidadProducto: {
         type: Number,
         required: true,
-      }
-    },
+      },
+    }
   ],
   id_usuario: {
     type: String,
