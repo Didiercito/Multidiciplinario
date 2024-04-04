@@ -28,7 +28,15 @@ const VerificarJWT = (req, res, next) => {
             });
         }
         
-        req.usuario = decoded;
+        if (!decoded.roles) {
+            console.error('El token no contiene información sobre los roles del usuario');
+            return res.status(401).json({
+                message: 'Error al validar el token',
+                error: 'El token no contiene información sobre los roles del usuario'
+            });
+        }
+        
+        req.usuario = decoded; 
         next();
     });
 };

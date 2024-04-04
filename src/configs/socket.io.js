@@ -1,23 +1,22 @@
-const socketIO = require('socket.io');
-const MensajeController = require('../controllers/Mensaje.controller');
+const socketIo = require('socket.io');
 
-module.exports = (server) => {
-  const io = socketIO(server);
+function configureSocket(server) {
+    const io = socketIo(server);
 
-  io.on('connection', (socket) => {
-    console.log('Nuevo cliente conectado');
+    io.on('connection', (socket) => {
+        console.log('Nuevo cliente conectado');
 
-    socket.on('enviarMensaje', async (data) => {
-      try {
-        const mensaje = await MensajeController.enviarMensaje(data.remitenteId, data.destinatarioId, data.contenido);
-        io.emit('nuevoMensaje', mensaje);
-      } catch (error) {
-        console.error('Error al enviar el mensaje:', error.message);
-      }
+        socket.on('joinChat', (chatId) => {
+            socket.join(chatId);
+            console.log(`Usuario ingresó al chat ${chatId}`);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Cliente desconectado');
+        });
     });
 
-    socket.on('disconnect', () => {
-      console.log('Cliente desconectado');
-    });
-  });
-};
+    return io;
+}
+
+module.exports = configureSocket;

@@ -2,20 +2,20 @@ const Usuario = require('../models/Usuarios.models');
 
 const obtenerUsuarios = async (req, res) => {
   try {
-    if (req.usuario && req.usuario.roles.includes('Administrador')) {
-      const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
-        .populate({
-          path: 'carrito.productos.producto',
-          model: 'Producto',
-          select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
-        });
-      res.json({ usuarios });
-    } else {
-      return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
-    }
+      if (req.usuario && req.usuario.roles.includes('Administrador')) {
+          const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
+              .populate({
+                  path: 'carrito.productos.producto',
+                  model: 'Producto',
+                  select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
+              });
+          res.json({ usuarios });
+      } else {
+          return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
+      }
   } catch (error) {
-    console.error('Error al obtener los usuarios:', error);
-    res.status(500).json({ error: 'Error al obtener los usuarios' });
+      console.error('Error al obtener los usuarios:', error);
+      res.status(500).json({ error: 'Error al obtener los usuarios' });
   }
 };
 
