@@ -26,7 +26,6 @@ const crearProducto = async (req, res) => {
             return res.status(403).json({ error: 'No tienes permisos para crear productos' });
         }
 
-        // Verificar si la cantidad es negativa
         if (req.body.cantidad <=0) {
             return res.status(400).json({ error: 'La cantidad no es valida' });
         }
@@ -49,7 +48,6 @@ const actualizarProducto = async (req, res) => {
             return res.status(403).json({ error: 'No tienes permisos para actualizar productos' });
         }
 
-        // Verificar si la cantidad es negativa
         if (req.body.cantidad < 0) {
             return res.status(400).json({ error: 'La cantidad no es valida' });
         }
