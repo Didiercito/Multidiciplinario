@@ -1,61 +1,36 @@
 const Chat = require('../models/Chat.models');
-const Usuario = require('../models/Usuarios.models');
-
-
-//El unico error que hay es con este controlador, no se puede iniciar el chat con un usuario en especifico 
-
-const IniciarChat = async (req, res) => {
-    try {
-        const { id_usuario } = req.params;
-
-        if (!req.usuario.roles.includes('Administrador')) {
-            return res.status(403).json({ mensaje: 'No tienes permisos para iniciar un chat' });
-        }
-
-        const usuario = await Usuario.findOne({ id_usuario });
-
-        if (!usuario) {
-            return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-        }
-
-        const chatExistente = await Chat.findOne({ usuario: usuario._id, administrador: req.usuario._id });
-        if (chatExistente) {
-            return res.status(400).json({ mensaje: 'Ya existe un chat entre el usuario y el administrador' });
-        }
-
-        const nuevoChat = new Chat({
-            usuario: usuario._id,
-            administrador: req.usuario._id
-        });
-        await nuevoChat.save();
-
-        req.app.get('io').emit('joinChat', nuevoChat._id);
-
-        res.status(201).json({ mensaje: 'Chat iniciado correctamente' });
-    } catch (error) {
-        console.error('Error al iniciar el chat:', error);
-        res.status(500).json({ mensaje: 'Hubo un error al iniciar el chat' });
-    }
-};
+const Usuario = require('../models/Usuarios.models')
 
 const enviarMensaje = async (req, res) => {
     try {
-        const { chatId, remitente, contenido } = req.body;
+        const { id_usuario } = req.params; // Obtener el ID de usuario de los parámetros de la URL
+        const { contenido } = req.body; // Obtener el contenido del cuerpo de la solicitud
 
-        const chat = await Chat.findById(chatId);
+        // Encontrar el usuario que envía el mensaje
+        const remitente = await Usuario.findById(id_usuario);
 
+        if (!remitente) {
+            return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+        }
+
+        // Encontrar el chat asociado con el ID de usuario
+        let chat = await Chat.findOne({ usuario: id_usuario });
+
+        // Si no se encuentra el chat, crear uno nuevo
         if (!chat) {
-            return res.status(404).json({ mensaje: 'Chat no encontrado' });
+            chat = await Chat.create({ usuario: id_usuario, mensajes: [] });
         }
 
-        if (chat.usuario.toString() !== remitente && chat.administrador.toString() !== remitente) {
-            return res.status(403).json({ mensaje: 'No tienes permiso para enviar mensajes en este chat' });
-        }
+        // Crear un nuevo mensaje con el ID de usuario como remitente, el nombre del remitente y el contenido
+        const nuevoMensaje = {
+            remitente: remitente._id, // Guardar el ID del remitente
+            nombreRemitente: remitente.nombre, // Guardar el nombre del remitente
+            contenido
+        };
 
-        chat.mensajes.push({ remitente, contenido });
+        // Agregar el nuevo mensaje al array de mensajes del chat
+        chat.mensajes.push(nuevoMensaje);
         await chat.save();
-
-        req.app.get('io').to(chatId).emit('nuevoMensaje', { remitente, contenido });
 
         res.status(200).json({ mensaje: 'Mensaje enviado correctamente' });
     } catch (error) {
@@ -64,7 +39,27 @@ const enviarMensaje = async (req, res) => {
     }
 };
 
+
+const obtenerMensajes = async (req, res) => {
+    try {
+        const { id_usuario } = req.params;
+
+        const chat = await Chat.findOne({ usuario: id_usuario });
+
+        if (!chat) {
+            return res.status(404).json({ mensaje: 'Chat no encontrado' });
+        }
+
+        const mensajes = chat.mensajes;
+
+        res.status(200).json({ mensajes });
+    } catch (error) {
+        console.error('Error al obtener los mensajes:', error);
+        res.status(500).json({ mensaje: 'Hubo un error al obtener los mensajes' });
+    }
+};
+
 module.exports = {
-    IniciarChat,
-    enviarMensaje
+    enviarMensaje,
+    obtenerMensajes
 };

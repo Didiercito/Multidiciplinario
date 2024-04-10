@@ -3,12 +3,7 @@ const mongoose = require('mongoose');
 const chatSchema = new mongoose.Schema({
     usuario: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Usuario', // Hacemos referencia al modelo Usuario
-        required: true
-    },
-    administrador: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Usuario', // Hacemos referencia al modelo Usuario
+        ref: 'Usuario', 
         required: true
     },
     mensajes: [{

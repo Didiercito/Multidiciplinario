@@ -7,7 +7,7 @@ const obtenerUsuarios = async (req, res) => {
               .populate({
                   path: 'carrito.productos.producto',
                   model: 'Producto',
-                  select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
+                  select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad '
               });
           res.json({ usuarios });
       } else {
