@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const Rol = require('../models/Rol.models');
 const Usuario = require('../models/Usuarios.models');
 
-const URILocal = 'mongodb://localhost:27017/Multidiciplinario';
+const URILocal = 'mongodb://localhost:27017/Multi';
 
 async function connectDB() {
     try {
