@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const usuarioRoutes = require('./src/routes/Usuario.routes');
 const productoRoutes = require('./src/routes/Producto.routes');
-const carritoRoutes = require('./src/routes/carrito.routes');
+const carritoRoutes = require('./src/routes/carritos.routes');
 const authRoutes = require('./src/routes/auth.routes');
 const chatRoutes = require('./src/routes/Chat.routes');
 
