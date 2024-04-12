@@ -16,7 +16,7 @@ const productoSchema = new mongoose.Schema({
   },
   caracteristicas: {
     type: String,
-    require: true,
+    required: true,
   },
   cantidad: {
     type: Number,
@@ -24,7 +24,7 @@ const productoSchema = new mongoose.Schema({
   },
   foto_producto: {
     type: String,
-    require: true,
+    required: true,
   },
   precio: {
     type: Number,
@@ -34,6 +34,10 @@ const productoSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  fecha_creacion: {
+    type: Date,
+    default: Date.now,
+  }
 });
 
 const Producto = mongoose.model("Producto", productoSchema);
