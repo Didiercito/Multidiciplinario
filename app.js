@@ -1,10 +1,16 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const usuarioRoutes = require('./src/routes/Usuario.routes');
 const productoRoutes = require('./src/routes/Producto.routes');
 const carritoRoutes = require('./src/routes/carritos.routes');
 const authRoutes = require('./src/routes/auth.routes');
 const chatRoutes = require('./src/routes/Chat.routes');
+
+
+app.use(cors({
+    origin: 'http://localhost:5173'
+  }));
 
 app.use(express.json());
 app.use('/api/v1/usuarios', usuarioRoutes);
