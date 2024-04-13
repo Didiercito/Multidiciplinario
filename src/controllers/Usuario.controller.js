@@ -1,23 +1,70 @@
 const Usuario = require('../models/Usuarios.models');
+const Carrito = require('../models/Carritos.models');
+const Producto = require ('../models/Productos.models');
 
 const obtenerUsuarios = async (req, res) => {
   try {
-      if (req.usuario && req.usuario.roles.includes('Administrador')) {
-          const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName')
-              .populate({
-                  path: 'carrito.productos.producto',
-                  model: 'Producto',
-                  select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad '
+    if (req.usuario && req.usuario.roles.includes('Administrador')) {
+      const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName');
+
+      const usuariosConCarrito = [];
+      for (const usuario of usuarios) {
+        const carritos = await Carrito.find({ id_usuario: usuario.id_usuario });
+        const carritosConProductos = [];
+
+        for (const carrito of carritos) {
+          const productos = [];
+          let monto_total = 0;
+          let totalProductos = 0;
+          for (const productoEnCarrito of carrito.productos) {
+            const producto = await Producto.findOne({ _id: productoEnCarrito.producto });
+            if (producto) {
+              productos.push({
+                id_producto: producto.id_producto,
+                nombre: producto.nombre,
+                descripcion: producto.descripcion,
+                precio: producto.precio,
+                caracteristicas: producto.caracteristicas,
+                foto_producto: producto.foto_producto,
+                categoria: producto.categoria,
+                cantidad: producto.cantidad,
+                cantidadProducto: productoEnCarrito.cantidadProducto
               });
-          res.json({ usuarios });
-      } else {
-          return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
+              monto_total += producto.precio * productoEnCarrito.cantidadProducto;
+              totalProductos += productoEnCarrito.cantidadProducto; // Incrementar totalProductos por cada producto agregado al carrito
+            }
+          }
+
+          carritosConProductos.push({
+            id_carrito: carrito.id_carrito,
+            productos: productos,
+            monto_total: monto_total,
+            totalProductos: totalProductos // Actualizar totalProductos con el valor correcto
+          });
+        }
+
+        usuariosConCarrito.push({
+          id_usuario: usuario.id_usuario,
+          nombre: usuario.nombre,
+          apellido: usuario.apellido,
+          correo: usuario.correo,
+          telefono: usuario.telefono,
+          usuario: usuario.usuario,
+          foto_perfil: usuario.foto_perfil,
+          carrito: carritosConProductos
+        });
       }
+
+      res.json({ usuarios: usuariosConCarrito });
+    } else {
+      return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
+    }
   } catch (error) {
-      console.error('Error al obtener los usuarios:', error);
-      res.status(500).json({ error: 'Error al obtener los usuarios' });
+    console.error('Error al obtener los usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios' });
   }
 };
+
 
 const obtenerUsuarioPorId = async (req, res) => {
   try {
@@ -77,16 +124,20 @@ const actualizarUsuario = async (req, res) => {
 
 const eliminarUsuario = async (req, res) => {
   try {
-    const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id_usuario }, {new: true});
+    const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id_usuario });
     if (!usuarioEliminado) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
+
+    await Carrito.findOneAndDelete({ id_usuario: req.params.id_usuario });
+
     res.json({ mensaje: 'Usuario eliminado correctamente', usuario: usuarioEliminado });
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
     res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 };
+
 
 
 module.exports = {
