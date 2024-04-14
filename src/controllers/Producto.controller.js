@@ -121,7 +121,6 @@ const obtenerProductosMasAgregados = async (req, res) => {
 
         const productosAgregados = {};
 
-        // Recorrer los carritos y contar la cantidad de veces que aparece cada producto
         carritos.forEach(carrito => {
             carrito.productos.forEach(item => {
                 const idProducto = item.producto.id_producto;
@@ -145,18 +144,35 @@ const obtenerProductosMasAgregados = async (req, res) => {
             });
         });
 
-        // Convertir el objeto a un array y ordenarlo por la cantidad
         const productosOrdenados = Object.values(productosAgregados).sort((a, b) => b.cantidad - a.cantidad);
 
-        // Devolver los productos más agregados
-        res.status(200).json({ productosMasAgregados: productosOrdenados });
+        res.status(200).json({ productos: productosOrdenados }); // Cambio aquí
     } catch (error) {
         console.error('Error al obtener los productos más agregados:', error);
         res.status(500).json({ error: 'Error al obtener los productos más agregados', details: error.message });
     }
 };
 
+const obtenerProductosPorCategoria = async (req, res) => {
+    try {
+        const { categoria } = req.params;
 
+        if (!categoria) {
+            return res.status(400).json({ error: 'Debe proporcionar una categoría' });
+        }
+
+        const productos = await Producto.find({ categoria });
+
+        if (productos.length === 0) {
+            return res.status(404).json({ mensaje: 'No se encontraron productos para la categoría especificada' });
+        }
+
+        res.json({ productos });
+    } catch (error) {
+        console.error('Error al obtener productos por categoría:', error);
+        res.status(500).json({ error: 'Error al obtener productos por categoría', details: error.message });
+    }
+};
 
 module.exports = {
     obtenerProductos,
@@ -165,5 +181,6 @@ module.exports = {
     eliminarProducto,
     obtenerProductoPorId,
     productosRecientes,
-    obtenerProductosMasAgregados
+    obtenerProductosMasAgregados,
+    obtenerProductosPorCategoria
 };

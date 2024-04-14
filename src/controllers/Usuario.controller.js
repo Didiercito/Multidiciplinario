@@ -31,7 +31,7 @@ const obtenerUsuarios = async (req, res) => {
                 cantidadProducto: productoEnCarrito.cantidadProducto
               });
               monto_total += producto.precio * productoEnCarrito.cantidadProducto;
-              totalProductos += productoEnCarrito.cantidadProducto; // Incrementar totalProductos por cada producto agregado al carrito
+              totalProductos += productoEnCarrito.cantidadProducto;
             }
           }
 
@@ -39,7 +39,7 @@ const obtenerUsuarios = async (req, res) => {
             id_carrito: carrito.id_carrito,
             productos: productos,
             monto_total: monto_total,
-            totalProductos: totalProductos // Actualizar totalProductos con el valor correcto
+            totalProductos: totalProductos 
           });
         }
 
