@@ -77,12 +77,17 @@ const signin = async (req, res) => {
 
         const token = jwt.sign({ id: user._id, roles }, jwtSecret, { expiresIn: '10h' });
 
-        res.json({ message: 'Inicio de sesión correcto', token });
+        res.json({ 
+            message: 'Inicio de sesión correcto', 
+            token,
+            id_usuario: user.id_usuario
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al iniciar sesión' });
     }
 }
+
 
 module.exports = { 
     signup, 
