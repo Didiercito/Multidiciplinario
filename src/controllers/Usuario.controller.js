@@ -1,6 +1,6 @@
 const Usuario = require('../models/Usuarios.models');
 const Carrito = require('../models/Carritos.models');
-const Producto = require ('../models/Productos.models');
+const Producto = require('../models/Productos.models');
 
 const obtenerUsuarios = async (req, res) => {
   try {
@@ -39,7 +39,7 @@ const obtenerUsuarios = async (req, res) => {
             id_carrito: carrito.id_carrito,
             productos: productos,
             monto_total: monto_total,
-            totalProductos: totalProductos 
+            totalProductos: totalProductos
           });
         }
 
@@ -51,6 +51,7 @@ const obtenerUsuarios = async (req, res) => {
           telefono: usuario.telefono,
           usuario: usuario.usuario,
           foto_perfil: usuario.foto_perfil,
+          contrasena: usuario.contrasena,
           carrito: carritosConProductos
         });
       }
@@ -65,41 +66,61 @@ const obtenerUsuarios = async (req, res) => {
   }
 };
 
-
 const obtenerUsuarioPorId = async (req, res) => {
   try {
-    const usuario = await Usuario.findOne({ id_usuario: req.params.id_usuario })
-      .populate({
-        path: 'carrito',
-        populate: {
-          path: 'productos.producto', 
-          model: 'Producto',
-          select: 'id_producto nombre descripcion precio caracteristicas foto_producto categoria cantidad'
-        }
-      });
+    const usuario = await Usuario.findOne({ id_usuario: req.params.id_usuario });
 
     if (!usuario) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
 
-    const carritoConProductos = usuario.carrito.map(item => ({
-      id_carrito: item.id_carrito,
-      productos: item.productos.map(producto => ({
-        id_producto: producto.producto.id_producto,
-        nombre: producto.producto.nombre,
-        descripcion: producto.producto.descripcion,
-        precio: producto.producto.precio,
-        foto_producto: producto.producto.foto_producto,
-        cantidadProducto: producto.cantidadProducto
-      })),
-      id_usuario: item.id_usuario,
-      cantidad_productos: item.cantidad_productos,
-      monto_total: item.monto_total
-    }));
+    const carritos = await Carrito.find({ id_usuario: usuario.id_usuario });
+    const carritosConProductos = [];
+    let totalProductosUsuario = 0;
 
-    usuario.carrito = carritoConProductos;
+    for (const carrito of carritos) {
+      const productos = [];
+      let totalProductosCarrito = 0;
 
-    res.json({ usuario });
+      for (const productoEnCarrito of carrito.productos) {
+        const producto = await Producto.findOne({ _id: productoEnCarrito.producto });
+        if (producto) {
+          productos.push({
+            id_producto: producto.id_producto,
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            precio: producto.precio,
+            foto_producto: producto.foto_producto,
+            cantidadProducto: productoEnCarrito.cantidadProducto
+          });
+
+          totalProductosCarrito += productoEnCarrito.cantidadProducto;
+          totalProductosUsuario += productoEnCarrito.cantidadProducto;
+        }
+      }
+
+      carritosConProductos.push({
+        id_carrito: carrito.id_carrito,
+        productos: productos,
+        monto_total: carrito.monto_total,
+        totalProductos: totalProductosCarrito
+      });
+    }
+
+    const usuarioConCarrito = {
+      id_usuario: usuario.id_usuario,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      correo: usuario.correo,
+      telefono: usuario.telefono,
+      usuario: usuario.usuario,
+      foto_perfil: usuario.foto_perfil,
+      contrasena: usuario.contrasena,
+      carrito: carritosConProductos,
+      totalProductos: totalProductosUsuario 
+    };
+
+    res.json({ usuario: usuarioConCarrito });
   } catch (error) {
     console.error('Error al obtener el usuario:', error);
     res.status(500).json({ error: 'Error al obtener el usuario' });
@@ -121,7 +142,6 @@ const actualizarUsuario = async (req, res) => {
   }
 };
 
-
 const eliminarUsuario = async (req, res) => {
   try {
     const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id_usuario });
@@ -137,8 +157,6 @@ const eliminarUsuario = async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 };
-
-
 
 module.exports = {
   obtenerUsuarios,
