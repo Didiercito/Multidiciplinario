@@ -1,3 +1,4 @@
+const { ObjectId } = require('mongoose').Types;
 const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const Usuario = require('../models/Usuarios.models');
@@ -5,6 +6,10 @@ const Usuario = require('../models/Usuarios.models');
 const obtenerCarritosConProductos = async (req, res) => {
   try {
     const carritos = await Carrito.find().populate('productos.producto');
+
+    if (!carritos || carritos.length === 0) {
+      return res.status(404).json({ message: "No se encontraron carritos." });
+    }
 
     const carritosSinCantidadProducto = carritos.map(carrito => ({
       ...carrito.toObject(),
@@ -51,8 +56,6 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
-
-
 
 const actualizarCarrito = async (req, res) => {
   try {
@@ -113,6 +116,61 @@ const actualizarCarrito = async (req, res) => {
   }
 };
 
+const eliminarProductoDelCarrito = async (req, res) => {
+  try {
+    const { id_usuario, id_producto } = req.params;
+
+    console.log("ID del producto a eliminar:", id_producto); // Agrega esta línea para imprimir el ID del producto
+
+    if (!id_producto || typeof id_producto !== 'string' || id_producto.length !== 24) {
+      return res.status(400).json({ message: "El ID del producto no es válido." });
+    }
+
+    // Convertir el id_producto a ObjectId
+    const productoId = new ObjectId(id_producto);
+
+    const carrito = await Carrito.findOne({ id_usuario });
+
+    if (!carrito) {
+      return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
+    }
+
+    console.log("Productos en el carrito:", carrito.productos); // Agrega esta línea para imprimir los productos en el carrito
+
+    const productoIndex = carrito.productos.findIndex(item => item.producto.toString() === id_producto);
+
+    if (productoIndex === -1) {
+      return res.status(404).json({ message: "Producto no encontrado en el carrito." });
+    }
+
+    const producto = await Producto.findById(productoId);
+    if (!producto) {
+      return res.status(404).json({ message: "Producto no encontrado en la base de datos." });
+    }
+
+    // Restaurar la cantidad del producto en el inventario
+    producto.cantidad += carrito.productos[productoIndex].cantidadProducto;
+
+    // Eliminar el producto del carrito
+    carrito.productos.splice(productoIndex, 1);
+
+    // Actualizar la cantidad de productos y el monto total en el carrito
+    carrito.cantidad_productos -= 1;
+    carrito.monto_total -= producto.precio;
+
+    // Guardar los cambios en el carrito y el producto
+    await carrito.save();
+    await producto.save();
+
+    res.status(200).json({ message: "Producto eliminado del carrito correctamente", carrito });
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ message: "Error al eliminar el producto del carrito.", error: error.message });
+  }
+};
+
+
+
 const agregarProductoAlCarrito = async (req, res) => {
   try {
     const { id_usuario, id_producto } = req.params;
@@ -171,56 +229,47 @@ const agregarProductoAlCarrito = async (req, res) => {
   }
 };
 
-const eliminarProductoDelCarrito = async (req, res) => {
+const eliminarTodosLosProductosDelCarrito = async (req, res) => {
   try {
-    const { id_usuario, id_producto } = req.params;
+    const id_usuario = req.params.id_usuario;
 
-    if (!id_producto) {
-      return res.status(400).json({ message: "El ID del producto no está definido." });
-    }
-
+    // Buscar el carrito del usuario por su ID
     const carrito = await Carrito.findOne({ id_usuario });
 
     if (!carrito) {
       return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
-    const productosEnCarrito = carrito.productos.filter(item => item.producto.toString() !== id_producto);
-
-    const productoEliminado = carrito.productos.find(item => item.producto.toString() === id_producto);
-    if (!productoEliminado) {
-      return res.status(404).json({ message: "Producto eliminado no encontrado en el carrito." });
+    // Iterar sobre los productos del carrito y restaurar la cantidad al inventario
+    for (const producto of carrito.productos) {
+      const productoDB = await Producto.findById(producto.producto);
+      if (productoDB) {
+        productoDB.cantidad += producto.cantidadProducto;
+        await productoDB.save();
+      }
     }
 
-    const producto = await Producto.findById(id_producto);
-    if (!producto) {
-      return res.status(404).json({ message: "Producto eliminado no encontrado en la base de datos." });
-    }
+    // Eliminar todos los productos del carrito
+    carrito.productos = [];
+    carrito.cantidad_productos = 0;
+    carrito.monto_total = 0;
 
-    producto.cantidad += productoEliminado.cantidadProducto;
-    await producto.save();
-
-    carrito.productos = productosEnCarrito;
-
-    carrito.cantidad_productos -= productoEliminado.cantidadProducto;
-    carrito.monto_total -= producto.precio * productoEliminado.cantidadProducto;
-    carrito.monto_total = Math.max(0, carrito.monto_total);
-
+    // Guardar los cambios en el carrito
     await carrito.save();
 
-    res.status(200).json({ message: "Producto eliminado correctamente", id_producto: id_producto, carrito });
+    // Enviar la respuesta con el carrito actualizado
+    res.status(200).json({ message: "Se eliminaron todos los productos del carrito del usuario.", carrito });
   } catch (error) {
     console.error(error.message);
-    res.status(400).json({ message: "Error al eliminar el producto del carrito.", error: error.message });
+    res.status(400).json({ message: "Error al eliminar todos los productos del carrito del usuario.", error: error.message });
   }
 };
-
-
 
 module.exports = {
   eliminarProductoDelCarrito,
   agregarProductoAlCarrito,
+  eliminarTodosLosProductosDelCarrito,
+  actualizarCarrito,
   obtenerCarritosConProductos,
   buscarCarritoPorIdUsuario,
-  actualizarCarrito
 };
