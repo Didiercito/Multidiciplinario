@@ -2,16 +2,23 @@ const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const Usuario = require('../models/Usuarios.models');
 
-
-
-
-
-
 const obtenerCarritosConProductos = async (req, res) => {
   try {
     const carritos = await Carrito.find().populate('productos.producto');
 
-    res.status(200).json({ carritos });
+    const carritosSinCantidadProducto = carritos.map(carrito => ({
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => ({
+        ...producto.toObject(),
+        producto: {
+          ...producto.producto.toObject(),
+          cantidadProducto: undefined
+        },
+        cantidadProducto: undefined
+      }))
+    }));
+
+    res.status(200).json({ carritos: carritosSinCantidadProducto });
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
   }
@@ -27,18 +34,23 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
-    // Mapear los productos en el carrito y extraer solo los IDs de los productos
-    const id_productos = carrito.productos.map(producto => producto.producto.id_producto);
+    const carritoSinCantidadProducto = {
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => ({
+        ...producto.toObject(),
+        producto: {
+          ...producto.producto.toObject(),
+          cantidadProducto: undefined
+        },
+        cantidadProducto: undefined
+      }))
+    };
 
-    // Insertar los IDs de los productos después de la lista de productos en el objeto carrito
-    carrito.id_productos = id_productos;
-
-    res.status(200).json({ carrito });
+    res.status(200).json({ carrito: carritoSinCantidadProducto });
   } catch (error) {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
-
 
 
 
