@@ -3,29 +3,40 @@ const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const Usuario = require('../models/Usuarios.models');
 
-const obtenerCarritosConProductos = async (req, res) => {
+const buscarCarritoPorIdUsuario = async (req, res) => {
   try {
-    const carritos = await Carrito.find().populate('productos.producto');
+    const id_usuario = req.params.id_usuario;
 
-    if (!carritos || carritos.length === 0) {
-      return res.status(404).json({ message: "No se encontraron carritos." });
+    const carrito = await Carrito.findOne({ id_usuario }).populate('productos.producto');
+
+    if (!carrito) {
+      return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
-    const carritosSinCantidadProducto = carritos.map(carrito => ({
-      ...carrito.toObject(),
-      productos: carrito.productos.map(producto => ({
-        ...producto.toObject(),
-        producto: {
-          ...producto.producto.toObject(),
-          cantidadProducto: undefined
-        },
-        cantidadProducto: undefined
-      }))
-    }));
+    if (!carrito.productos || carrito.productos.length === 0) {
+      return res.status(404).json({ message: "El carrito del usuario no tiene productos." });
+    }
 
-    res.status(200).json({ carritos: carritosSinCantidadProducto });
+    const carritoSinCantidadProducto = {
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => {
+        if (!producto.producto) {
+          return null;
+        }
+        return {
+          ...producto.toObject(),
+          producto: {
+            ...producto.producto.toObject(),
+            cantidadProducto: undefined
+          },
+          cantidadProducto: undefined
+        };
+      }).filter(producto => producto !== null)
+    };
+
+    res.status(200).json({ carrito: carritoSinCantidadProducto });
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
+    res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
 
