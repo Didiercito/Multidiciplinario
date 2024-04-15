@@ -23,28 +23,28 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
+    // Verificar si hay productos en el carrito y si no, retornar un carrito vacío
     if (!carrito.productos || carrito.productos.length === 0) {
-      return res.status(404).json({ message: "El carrito del usuario no tiene productos." });
+      return res.status(200).json({ carritos: [carrito.toObject()] });
     }
 
+    // Si hay productos en el carrito, procesar la población de cada producto
     const carritoConProductos = {
       ...carrito.toObject(),
       productos: carrito.productos.map(producto => ({
         ...producto.toObject(),
-        producto: {
-          ...(producto.producto?.toObject() || {}),
-          _id: producto.producto?._id || null
-        }
+        producto: producto.producto ? {
+          ...producto.producto.toObject(),
+          _id: producto.producto._id || null
+        } : null
       }))
     };
 
-    res.status(200).json({ carrito: carritoConProductos });
+    res.status(200).json({ carritos: [carritoConProductos] });
   } catch (error) {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
-
-
 
 
 const actualizarCarrito = async (req, res) => {
