@@ -80,7 +80,8 @@ const signin = async (req, res) => {
         res.json({ 
             message: 'Inicio de sesión correcto', 
             token,
-            id_usuario: user.id_usuario
+            id_usuario: user.id_usuario,
+            roles
         });
     } catch (error) {
         console.error(error);
