@@ -39,16 +39,25 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
+    if (!carrito.productos || carrito.productos.length === 0) {
+      return res.status(404).json({ message: "El carrito del usuario no tiene productos." });
+    }
+
     const carritoSinCantidadProducto = {
       ...carrito.toObject(),
-      productos: carrito.productos.map(producto => ({
-        ...producto.toObject(),
-        producto: {
-          ...producto.producto.toObject(),
+      productos: carrito.productos.map(producto => {
+        if (!producto.producto) {
+          return null;
+        }
+        return {
+          ...producto.toObject(),
+          producto: {
+            ...producto.producto.toObject(),
+            cantidadProducto: undefined
+          },
           cantidadProducto: undefined
-        },
-        cantidadProducto: undefined
-      }))
+        };
+      }).filter(producto => producto !== null)
     };
 
     res.status(200).json({ carrito: carritoSinCantidadProducto });
