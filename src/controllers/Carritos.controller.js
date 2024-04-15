@@ -6,43 +6,18 @@ const obtenerCarritosConProductos = async (req, res) => {
   try {
     const carritos = await Carrito.find().populate('productos.producto');
 
+    // Verificar si carritos es null o no tiene elementos
     if (!carritos || carritos.length === 0) {
       return res.status(404).json({ message: "No se encontraron carritos con productos." });
     }
 
-    // Mapear los carritos para ajustar la estructura de los productos
-    const carritosConProductos = carritos.map(carrito => ({
-      _id: carrito._id,
-      id_carrito: carrito.id_carrito,
-      id_usuario: carrito.id_usuario,
-      cantidad_productos: carrito.cantidad_productos,
-      monto_total: carrito.monto_total,
-      __v: carrito.__v,
-      productos: carrito.productos.map(item => ({
-        producto: {
-          _id: item.producto._id,
-          id_producto: item.producto.id_producto,
-          nombre: item.producto.nombre,
-          descripcion: item.producto.descripcion,
-          caracteristicas: item.producto.caracteristicas,
-          cantidad: item.producto.cantidad,
-          foto_producto: item.producto.foto_producto,
-          precio: item.producto.precio,
-          categoria: item.producto.categoria,
-          fecha_creacion: item.producto.fecha_creacion,
-          __v: item.producto.__v
-        },
-        cantidadProducto: item.cantidadProducto,
-        _id: item._id
-      }))
-    }));
-
-    res.status(200).json({ carritos: carritosConProductos });
+    res.status(200).json({ carritos });
   } catch (error) {
-    console.error(error); // Agrega esta línea para ver el error en la consola
+    console.error(error); // Imprimir el error en la consola para depuración
     res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
   }
 };
+
 const buscarCarritoPorIdUsuario = async (req, res) => {
   try {
     const id_usuario = req.params.id_usuario;
@@ -55,31 +30,16 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
 
     // Verificar si hay productos en el carrito y que no sea null
     if (carrito.productos && carrito.productos.length > 0) {
-      // Mapear los productos en el carrito para ajustar su estructura
-      const productos = carrito.productos.map(item => ({
-        producto: {
-          _id: item.producto._id,
-          id_producto: item.producto.id_producto,
-          nombre: item.producto.nombre,
-          descripcion: item.producto.descripcion,
-          caracteristicas: item.producto.caracteristicas,
-          cantidad: item.producto.cantidad,
-          foto_producto: item.producto.foto_producto,
-          precio: item.producto.precio,
-          categoria: item.producto.categoria,
-          fecha_creacion: item.producto.fecha_creacion,
-          __v: item.producto.__v
-        },
-        cantidadProducto: item.cantidadProducto,
-        _id: item._id
-      }));
+      // Mapear los productos en el carrito y extraer solo los IDs de los productos
+      const id_productos = carrito.productos.map(producto => producto.producto && producto.producto.id_producto);
 
-      // Insertar los productos mapeados en la respuesta del carrito
-      carrito.productos = productos;
+      // Insertar los IDs de los productos después de la lista de productos en el objeto carrito
+      carrito.id_productos = id_productos;
     }
 
     res.status(200).json({ carrito });
   } catch (error) {
+    console.error(error); // Imprimir el error en la consola para depuración
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
