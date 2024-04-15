@@ -3,6 +3,32 @@ const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const Usuario = require('../models/Usuarios.models');
 
+const obtenerCarritosConProductos = async (req, res) => {
+  try {
+    const carritos = await Carrito.find().populate('productos.producto');
+
+    if (!carritos || carritos.length === 0) {
+      return res.status(404).json({ message: "No se encontraron carritos." });
+    }
+
+    const carritosSinCantidadProducto = carritos.map(carrito => ({
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => ({
+        ...producto.toObject(),
+        producto: {
+          ...producto.producto.toObject(),
+          cantidadProducto: undefined
+        },
+        cantidadProducto: undefined
+      }))
+    }));
+
+    res.status(200).json({ carritos: carritosSinCantidadProducto });
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
+  }
+};
+
 const buscarCarritoPorIdUsuario = async (req, res) => {
   try {
     const id_usuario = req.params.id_usuario;
@@ -253,6 +279,6 @@ module.exports = {
   agregarProductoAlCarrito,
   eliminarTodosLosProductosDelCarrito,
   actualizarCarrito,
+  obtenerCarritosConProductos,
   buscarCarritoPorIdUsuario,
 };
-
