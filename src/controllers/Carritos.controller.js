@@ -51,10 +51,7 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       ...carrito.toObject(),
       productos: carrito.productos.map(producto => ({
         ...producto.toObject(),
-        producto: {
-          ...producto.producto.toObject(),
-          cantidadProducto: undefined
-        },
+        producto: producto.producto ? producto.producto.toObject() : null,
         cantidadProducto: undefined
       }))
     };
