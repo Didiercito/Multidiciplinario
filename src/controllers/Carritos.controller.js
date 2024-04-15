@@ -11,17 +11,27 @@ const obtenerCarritosConProductos = async (req, res) => {
       return res.status(404).json({ message: "No se encontraron carritos." });
     }
 
-    const carritosSinCantidadProducto = carritos.map(carrito => ({
-      ...carrito.toObject(),
-      productos: carrito.productos.map(producto => ({
-        ...producto.toObject(),
-        producto: {
-          ...producto.producto.toObject(),
-          cantidadProducto: undefined
-        },
-        cantidadProducto: undefined
-      }))
-    }));
+    const carritosSinCantidadProducto = carritos.map(carrito => {
+      if (!carrito) {
+        return null;
+      }
+      return {
+        ...carrito.toObject(),
+        productos: carrito.productos.map(producto => {
+          if (!producto.producto) {
+            return null;
+          }
+          return {
+            ...producto.toObject(),
+            producto: {
+              ...producto.producto.toObject(),
+              cantidadProducto: undefined
+            },
+            cantidadProducto: undefined
+          };
+        }).filter(producto => producto !== null)
+      };
+    }).filter(carrito => carrito !== null);
 
     res.status(200).json({ carritos: carritosSinCantidadProducto });
   } catch (error) {
@@ -43,29 +53,11 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "El carrito del usuario no tiene productos." });
     }
 
-    const carritoSinCantidadProducto = {
-      ...carrito.toObject(),
-      productos: carrito.productos.map(producto => {
-        if (!producto.producto) {
-          return null;
-        }
-        return {
-          ...producto.toObject(),
-          producto: {
-            ...producto.producto.toObject(),
-            cantidadProducto: undefined
-          },
-          cantidadProducto: undefined
-        };
-      }).filter(producto => producto !== null)
-    };
-
-    res.status(200).json({ carrito: carritoSinCantidadProducto });
+    res.status(200).json({ carrito });
   } catch (error) {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
-
 const actualizarCarrito = async (req, res) => {
   try {
     const { id_usuario, id_producto, cantidadProducto } = req.params;
