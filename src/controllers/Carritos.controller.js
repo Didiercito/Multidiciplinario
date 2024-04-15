@@ -44,10 +44,7 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
   }
 };
 
-module.exports = {
-  obtenerCarritosConProductos,
-  buscarCarritoPorIdUsuario
-};
+
 
 
 
