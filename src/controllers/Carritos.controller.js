@@ -13,12 +13,10 @@ const obtenerCarritosConProductos = async (req, res) => {
 
     const carritosConProductos = carritos.map(carrito => ({
       ...carrito.toObject(),
-      productos: carrito.productos.map(producto => {
-        return {
-          ...producto.producto.toObject(),
-          _id: producto.producto._id
-        };
-      })
+      productos: carrito.productos.map(producto => ({
+        ...(producto.producto?.toObject() || {}),
+        _id: producto.producto?._id || null
+      }))
     }));
 
     res.status(200).json({ carritos: carritosConProductos });
@@ -43,12 +41,10 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
 
     const carritoConProductos = {
       ...carrito.toObject(),
-      productos: carrito.productos.map(producto => {
-        return {
-          ...producto.producto.toObject(),
-          _id: producto.producto._id
-        };
-      })
+      productos: carrito.productos.map(producto => ({
+        ...(producto.producto?.toObject() || {}),
+        _id: producto.producto?._id || null
+      }))
     };
 
     res.status(200).json({ carrito: carritoConProductos });
@@ -56,6 +52,7 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
+
 
 
 
