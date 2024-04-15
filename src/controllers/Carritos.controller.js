@@ -1,10 +1,6 @@
-
 const Carrito = require("../models/Carritos.models");
 const Producto = require("../models/Productos.models");
 const Usuario = require('../models/Usuarios.models');
-
-
-
 
 
 
@@ -28,11 +24,14 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "Carrito no encontrado para el usuario." });
     }
 
-    // Mapear los productos en el carrito y extraer solo los IDs de los productos
-    const id_productos = carrito.productos.map(producto => producto.producto.id_producto);
+    // Verificar si hay productos en el carrito y que no sea null
+    if (carrito.productos && carrito.productos.length > 0) {
+      // Mapear los productos en el carrito y extraer solo los IDs de los productos
+      const id_productos = carrito.productos.map(producto => producto.producto && producto.producto.id_producto);
 
-    // Insertar los IDs de los productos después de la lista de productos en el objeto carrito
-    carrito.id_productos = id_productos;
+      // Insertar los IDs de los productos después de la lista de productos en el objeto carrito
+      carrito.id_productos = id_productos;
+    }
 
     res.status(200).json({ carrito });
   } catch (error) {
