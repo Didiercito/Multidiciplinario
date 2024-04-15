@@ -1,24 +1,12 @@
 const express = require('express');
-    const router = express.Router();
-    const productoController = require('../controllers/Producto.controller');
-    const VerificarJWT = require('../middleware/auth.middleware');
-    const accountLimiter = require('../middleware/rateLimit.middleware');
+const router = express.Router();
+const carritoController = require('../controllers/Carritos.controller');
+const accountLimiter = require('../middleware/rateLimit.middleware');
 
-    router.get('/', accountLimiter, productoController.obtenerProductos);
+router.post('/:id_usuario/agregar/:id_producto', carritoController.agregarProductoAlCarrito);
+router.delete('/:id_usuario/eliminar/:id_producto', carritoController.eliminarProductoDelCarrito);
+router.put('/:id_usuario/actualizar/:id_producto/:cantidadProducto', carritoController.actualizarCarrito);
+router.get('/', accountLimiter, carritoController.obtenerCarritosConProductos);
+router.get('/buscar/:id_usuario', accountLimiter, carritoController.buscarCarritoPorIdUsuario);
 
-    router.get('/recientes',productoController.productosRecientes);
-    
-    router.get('/mas-agregados',productoController.obtenerProductosMasAgregados);
-
-    router.get('/:id_producto', productoController.obtenerProductoPorId);
-    
-    router.post('/', VerificarJWT, productoController.crearProducto); 
-    
-    router.put('/:id_producto', VerificarJWT, productoController.actualizarProducto);
-    
-    router.delete('/:id_producto', VerificarJWT, productoController.eliminarProducto);
-
-    router.get('/por-categoria/:categoria', accountLimiter, productoController.obtenerProductosPorCategoria);
-
-
-    module.exports = router;
+module.exports = router;
