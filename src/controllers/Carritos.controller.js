@@ -39,10 +39,10 @@ const obtenerCarritosConProductos = async (req, res) => {
 
     res.status(200).json({ carritos: carritosConProductos });
   } catch (error) {
+    console.error(error); // Agrega esta línea para ver el error en la consola
     res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
   }
 };
-
 const buscarCarritoPorIdUsuario = async (req, res) => {
   try {
     const id_usuario = req.params.id_usuario;
