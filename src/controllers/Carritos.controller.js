@@ -7,19 +7,7 @@ const obtenerCarritosConProductos = async (req, res) => {
   try {
     const carritos = await Carrito.find().populate('productos.producto');
 
-    if (!carritos || carritos.length === 0) {
-      return res.status(404).json({ message: "No se encontraron carritos." });
-    }
-
-    const carritosConProductos = carritos.map(carrito => ({
-      ...carrito.toObject(),
-      productos: carrito.productos.map(producto => ({
-        ...(producto.producto?.toObject() || {}),
-        _id: producto.producto?._id || null
-      }))
-    }));
-
-    res.status(200).json({ carritos: carritosConProductos });
+    res.status(200).json({ carritos });
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
   }
@@ -42,8 +30,11 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
     const carritoConProductos = {
       ...carrito.toObject(),
       productos: carrito.productos.map(producto => ({
-        ...(producto.producto?.toObject() || {}),
-        _id: producto.producto?._id || null
+        ...producto.toObject(),
+        producto: {
+          ...(producto.producto?.toObject() || {}),
+          _id: producto.producto?._id || null
+        }
       }))
     };
 
