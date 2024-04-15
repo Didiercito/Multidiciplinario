@@ -11,29 +11,17 @@ const obtenerCarritosConProductos = async (req, res) => {
       return res.status(404).json({ message: "No se encontraron carritos." });
     }
 
-    const carritosSinCantidadProducto = carritos.map(carrito => {
-      if (!carrito) {
-        return null;
-      }
-      return {
-        ...carrito.toObject(),
-        productos: carrito.productos.map(producto => {
-          if (!producto.producto) {
-            return null;
-          }
-          return {
-            ...producto.toObject(),
-            producto: {
-              ...producto.producto.toObject(),
-              cantidadProducto: undefined
-            },
-            cantidadProducto: undefined
-          };
-        }).filter(producto => producto !== null)
-      };
-    }).filter(carrito => carrito !== null);
+    const carritosConProductos = carritos.map(carrito => ({
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => {
+        return {
+          ...producto.producto.toObject(),
+          _id: producto.producto._id
+        };
+      })
+    }));
 
-    res.status(200).json({ carritos: carritosSinCantidadProducto });
+    res.status(200).json({ carritos: carritosConProductos });
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los carritos con productos.", error: error.message });
   }
@@ -53,11 +41,24 @@ const buscarCarritoPorIdUsuario = async (req, res) => {
       return res.status(404).json({ message: "El carrito del usuario no tiene productos." });
     }
 
-    res.status(200).json({ carrito });
+    const carritoConProductos = {
+      ...carrito.toObject(),
+      productos: carrito.productos.map(producto => {
+        return {
+          ...producto.producto.toObject(),
+          _id: producto.producto._id
+        };
+      })
+    };
+
+    res.status(200).json({ carrito: carritoConProductos });
   } catch (error) {
     res.status(500).json({ message: "Error al buscar el carrito por ID de usuario.", error: error.message });
   }
 };
+
+
+
 const actualizarCarrito = async (req, res) => {
   try {
     const { id_usuario, id_producto, cantidadProducto } = req.params;
@@ -169,7 +170,6 @@ const eliminarProductoDelCarrito = async (req, res) => {
     res.status(400).json({ message: "Error al eliminar el producto del carrito.", error: error.message });
   }
 };
-
 
 
 const agregarProductoAlCarrito = async (req, res) => {
