@@ -5,15 +5,13 @@ const { v4: uuidv4 } = require("uuid");
 const jwtSecret = process.env.JWT_SECRET;
 const Usuario = require('../models/Usuarios.models');
 const Rol = require('../models/Rol.models');
-const Carrito = require ('../models/Carritos.models');
-
+const Carrito = require('../models/Carritos.models');
 
 const signup = async (req, res) => {
     try {
         const { id_usuario, nombre, apellido, correo, contrasena, telefono, usuario, foto_perfil } = req.body;
 
         const existingUser = await Usuario.findOne({ correo });
-
         if (existingUser) {
             return res.status(400).json({ error: 'El usuario ya existe' });
         }
@@ -36,10 +34,10 @@ const signup = async (req, res) => {
 
         await newUser.save();
 
-        const id_carrito  = uuidv4();
+        const id_carrito = uuidv4();
         const nuevoCarritoUsuario = new Carrito({
             id_carrito,
-            productos:[],
+            productos: [],
             id_usuario: newUser.id_usuario,
             cantidad_productos: 0,
             monto_total: 0
@@ -55,25 +53,20 @@ const signup = async (req, res) => {
 };
 
 const signin = async (req, res) => {
-    const { usuario, contrasena } = req.body;
-
     try {
-        const user = await Usuario.findOne({ usuario }).populate('roles');
+        const { usuario, contrasena } = req.body;
 
+        const user = await Usuario.findOne({ usuario }).populate('roles');
         if (!user) {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
         const passwordMatch = await bcrypt.compare(contrasena, user.contrasena);
-
         if (!passwordMatch) {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
-        let roles = [];
-        if (user.roles.length > 0) {
-            roles = user.roles.map(role => role.name);
-        }
+        const roles = user.roles.map(role => role.name);
 
         const token = jwt.sign({ id: user._id, roles }, jwtSecret, { expiresIn: '10h' });
 
@@ -87,8 +80,7 @@ const signin = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Error al iniciar sesión' });
     }
-}
-
+};
 
 module.exports = { 
     signup, 

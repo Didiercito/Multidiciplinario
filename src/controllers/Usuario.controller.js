@@ -4,62 +4,62 @@ const Producto = require('../models/Productos.models');
 
 const obtenerUsuarios = async (req, res) => {
   try {
-    if (req.usuario && req.usuario.roles.includes('Administrador')) {
-      const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName');
-
-      const usuariosConCarrito = [];
-      for (const usuario of usuarios) {
-        const carritos = await Carrito.find({ id_usuario: usuario.id_usuario });
-        const carritosConProductos = [];
-
-        for (const carrito of carritos) {
-          const productos = [];
-          let monto_total = 0;
-          let totalProductos = 0;
-          for (const productoEnCarrito of carrito.productos) {
-            const producto = await Producto.findOne({ _id: productoEnCarrito.producto });
-            if (producto) {
-              productos.push({
-                id_producto: producto.id_producto,
-                nombre: producto.nombre,
-                descripcion: producto.descripcion,
-                precio: producto.precio,
-                caracteristicas: producto.caracteristicas,
-                foto_producto: producto.foto_producto,
-                categoria: producto.categoria,
-                cantidad: producto.cantidad,
-                cantidadProducto: productoEnCarrito.cantidadProducto
-              });
-              monto_total += producto.precio * productoEnCarrito.cantidadProducto;
-              totalProductos += productoEnCarrito.cantidadProducto;
-            }
-          }
-
-          carritosConProductos.push({
-            id_carrito: carrito.id_carrito,
-            productos: productos,
-            monto_total: monto_total,
-            totalProductos: totalProductos
-          });
-        }
-
-        usuariosConCarrito.push({
-          id_usuario: usuario.id_usuario,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          correo: usuario.correo,
-          telefono: usuario.telefono,
-          usuario: usuario.usuario,
-          foto_perfil: usuario.foto_perfil,
-          contrasena: usuario.contrasena,
-          carrito: carritosConProductos
-        });
-      }
-
-      res.json({ usuarios: usuariosConCarrito });
-    } else {
+    if (!req.usuario || !req.usuario.roles.includes('Administrador')) {
       return res.status(403).json({ mensaje: 'Acceso denegado: Se requiere el rol de Administrador para realizar esta acción.' });
     }
+
+    const usuarios = await Usuario.find({}, '-_id id_usuario nombre apellido correo telefono usuario foto_perfil contrasena rolName');
+
+    const usuariosConCarrito = await Promise.all(usuarios.map(async (usuario) => {
+      const carritos = await Carrito.find({ id_usuario: usuario.id_usuario });
+
+      const carritosConProductos = await Promise.all(carritos.map(async (carrito) => {
+        let monto_total = 0;
+        let totalProductos = 0;
+
+        const productos = await Promise.all(carrito.productos.map(async (productoEnCarrito) => {
+          const producto = await Producto.findOne({ _id: productoEnCarrito.producto });
+
+          if (producto) {
+            monto_total += producto.precio * productoEnCarrito.cantidadProducto;
+            totalProductos += productoEnCarrito.cantidadProducto;
+
+            return {
+              id_producto: producto.id_producto,
+              nombre: producto.nombre,
+              descripcion: producto.descripcion,
+              precio: producto.precio,
+              caracteristicas: producto.caracteristicas,
+              foto_producto: producto.foto_producto,
+              categoria: producto.categoria,
+              cantidad: producto.cantidad,
+              cantidadProducto: productoEnCarrito.cantidadProducto
+            };
+          }
+        }));
+
+        return {
+          id_carrito: carrito.id_carrito,
+          productos: productos,
+          monto_total: monto_total,
+          totalProductos: totalProductos
+        };
+      }));
+
+      return {
+        id_usuario: usuario.id_usuario,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        correo: usuario.correo,
+        telefono: usuario.telefono,
+        usuario: usuario.usuario,
+        foto_perfil: usuario.foto_perfil,
+        contrasena: usuario.contrasena,
+        carrito: carritosConProductos
+      };
+    }));
+
+    res.json({ usuarios: usuariosConCarrito });
   } catch (error) {
     console.error('Error al obtener los usuarios:', error);
     res.status(500).json({ error: 'Error al obtener los usuarios' });
@@ -75,37 +75,36 @@ const obtenerUsuarioPorId = async (req, res) => {
     }
 
     const carritos = await Carrito.find({ id_usuario: usuario.id_usuario });
-    const carritosConProductos = [];
-    let totalProductosUsuario = 0;
 
-    for (const carrito of carritos) {
-      const productos = [];
+    const carritosConProductos = await Promise.all(carritos.map(async (carrito) => {
       let totalProductosCarrito = 0;
 
-      for (const productoEnCarrito of carrito.productos) {
+      const productos = await Promise.all(carrito.productos.map(async (productoEnCarrito) => {
         const producto = await Producto.findOne({ _id: productoEnCarrito.producto });
+
         if (producto) {
-          productos.push({
+          totalProductosCarrito += productoEnCarrito.cantidadProducto;
+
+          return {
             id_producto: producto.id_producto,
             nombre: producto.nombre,
             descripcion: producto.descripcion,
             precio: producto.precio,
             foto_producto: producto.foto_producto,
             cantidadProducto: productoEnCarrito.cantidadProducto
-          });
-
-          totalProductosCarrito += productoEnCarrito.cantidadProducto;
-          totalProductosUsuario += productoEnCarrito.cantidadProducto;
+          };
         }
-      }
+      }));
 
-      carritosConProductos.push({
+      return {
         id_carrito: carrito.id_carrito,
         productos: productos,
         monto_total: carrito.monto_total,
         totalProductos: totalProductosCarrito
-      });
-    }
+      };
+    }));
+
+    const totalProductosUsuario = carritosConProductos.reduce((total, carrito) => total + carrito.totalProductos, 0);
 
     const usuarioConCarrito = {
       id_usuario: usuario.id_usuario,
@@ -117,7 +116,7 @@ const obtenerUsuarioPorId = async (req, res) => {
       foto_perfil: usuario.foto_perfil,
       contrasena: usuario.contrasena,
       carrito: carritosConProductos,
-      totalProductos: totalProductosUsuario 
+      totalProductos: totalProductosUsuario
     };
 
     res.json({ usuario: usuarioConCarrito });
@@ -127,14 +126,14 @@ const obtenerUsuarioPorId = async (req, res) => {
   }
 };
 
-
-
 const actualizarUsuario = async (req, res) => {
   try {
     const usuarioActualizado = await Usuario.findOneAndUpdate({ id_usuario: req.params.id_usuario }, req.body, { new: true });
+
     if (!usuarioActualizado) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
+
     res.json({ mensaje: 'Usuario Actualizado correctamente', usuario: usuarioActualizado });
   } catch (error) {
     console.error('Error al actualizar el usuario:', error);
@@ -145,6 +144,7 @@ const actualizarUsuario = async (req, res) => {
 const eliminarUsuario = async (req, res) => {
   try {
     const usuarioEliminado = await Usuario.findOneAndDelete({ id_usuario: req.params.id_usuario });
+
     if (!usuarioEliminado) {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
