@@ -18,4 +18,6 @@
     
     router.delete('/:id_producto', VerificarJWT, productoController.eliminarProducto);
 
+    router.get('/:categoria', productoController.obtenerProductosPorCategoria);
+
     module.exports = router;
