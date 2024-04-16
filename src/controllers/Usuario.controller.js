@@ -149,7 +149,7 @@ const eliminarUsuario = async (req, res) => {
       return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     }
 
-    await Carrito.findOneAndDelete({ id_usuarnio: req.params.id_usuario });
+    await Carrito.findOneAndDelete({ id_usuario: req.params.id_usuario });
 
     res.json({ mensaje: 'Usuario eliminado correctamente', usuario: usuarioEliminado });
   } catch (error) {
