@@ -7,7 +7,7 @@ const obtenerProductos = async (req, res) => {
 
         const condiciones = {};
         if (nombre) {
-            condiciones.nombre = { $regex: new RegExp(nombre, 'i,I') };
+            condiciones.nombre = { $regex: new RegExp(nombre, 'i') };
         }
         if (categoria) {
             condiciones.categoria = categoria;
@@ -27,12 +27,9 @@ const crearProducto = async (req, res) => {
             return res.status(403).json({ error: 'No tienes permisos para crear productos' });
         }
 
-        if (req.body.cantidad <= 0) {
-            return res.status(400).json({ error: 'La cantidad no es valida' });
-        }
-
-        if (req.body.precio < 0) {
-            return res.status(400).json({ error: 'El precio no es valido' })
+        const { cantidad, precio } = req.body;
+        if (cantidad <= 0 || precio < 0) {
+            return res.status(400).json({ error: 'La cantidad o el precio no son válidos' });
         }
 
         const nuevoProducto = await Producto.create(req.body);
@@ -49,12 +46,9 @@ const actualizarProducto = async (req, res) => {
             return res.status(403).json({ error: 'No tienes permisos para actualizar productos' });
         }
 
-        if (req.body.cantidad < 0) {
-            return res.status(400).json({ error: 'La cantidad no es valida' });
-        }
-
-        if (req.body.precio < 0) {
-            return res.status(400).json({ error: 'El precio no es valido' })
+        const { cantidad, precio } = req.body;
+        if (cantidad !== undefined && cantidad < 0 || precio !== undefined && precio < 0) {
+            return res.status(400).json({ error: 'La cantidad o el precio no son válidos' });
         }
 
         const productoActualizado = await Producto.findOneAndUpdate({ id_producto: req.params.id_producto }, req.body, { new: true });
@@ -67,7 +61,6 @@ const actualizarProducto = async (req, res) => {
         res.status(500).json({ error: 'Error al actualizar el producto', details: error.message });
     }
 };
-
 
 const eliminarProducto = async (req, res) => {
     try {
@@ -117,36 +110,32 @@ const productosRecientes = async (req, res) => {
 
 const obtenerProductosMasAgregados = async (req, res) => {
     try {
-        const carritos = await Carrito.find().populate('productos.producto');
+        const carritos = await Carrito.aggregate([
+            { $unwind: "$productos" },
+            { $group: { _id: "$productos.producto", totalCantidad: { $sum: "$productos.cantidadProducto" } } },
+            { $lookup: { from: "productos", localField: "_id", foreignField: "_id", as: "producto" } },
+            { $unwind: "$producto" },
+            { $project: { 
+                _id: "$producto.id_producto",
+                nombre: "$producto.nombre",
+                descripcion: "$producto.descripcion",
+                caracteristicas: "$producto.caracteristicas",
+                cantidad: "$producto.cantidad",
+                foto_producto: "$producto.foto_producto",
+                precio: "$producto.precio",
+                categoria: "$producto.categoria",
+                fecha_creacion: "$producto.fecha_creacion",
+                cantidadProducto: "$totalCantidad"
+            } },
+            { $sort: { cantidadProducto: -1 } },
+            { $limit: 5 }
+        ]);
 
-        const productosAgregados = {};
+        if (carritos.length === 0) {
+            return res.status(404).json({ mensaje: 'No se encontraron productos más agregados' });
+        }
 
-        carritos.forEach(carrito => {
-            carrito.productos.forEach(item => {
-                const idProducto = item.producto.id_producto;
-
-                if (productosAgregados[idProducto]) {
-                    productosAgregados[idProducto].cantidad += item.cantidadProducto;
-                } else {
-                    productosAgregados[idProducto] = {
-                        id_producto: idProducto,
-                        nombre: item.producto.nombre,
-                        descripcion: item.producto.descripcion,
-                        caracteristicas: item.producto.caracteristicas,
-                        cantidad: item.producto.cantidad,
-                        foto_producto: item.producto.foto_producto,
-                        precio: item.producto.precio,
-                        categoria: item.producto.categoria,
-                        fecha_creacion: item.producto.fecha_creacion,
-                        cantidadProducto: item.cantidadProducto
-                    };
-                }
-            });
-        });
-
-        const productosOrdenados = Object.values(productosAgregados).sort((a, b) => b.cantidad - a.cantidad);
-
-        res.status(200).json({ productos: productosOrdenados }); // Cambio aquí
+        res.status(200).json({ productos: carritos });
     } catch (error) {
         console.error('Error al obtener los productos más agregados:', error);
         res.status(500).json({ error: 'Error al obtener los productos más agregados', details: error.message });
